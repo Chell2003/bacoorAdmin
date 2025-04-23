@@ -26,24 +26,41 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
   bool _isUploading = false;
 
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      withData: kIsWeb, // Get bytes if on web
-    );
+    setState(() {
+      _isUploading = true;  // Start loading state when picking file
+    });
 
-    if (result != null) {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        withData: kIsWeb, // Get bytes if on web
+      );
+
+      if (result != null) {
+        setState(() {
+          _fileName = result.files.single.name; // Always store the filename
+
+          if (kIsWeb) {
+            // For web, store the bytes
+            _fileBytes = result.files.single.bytes;
+            _filePath = null;
+          } else {
+            // For mobile/desktop, store the path
+            _filePath = result.files.single.path;
+            _fileBytes = null;
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error selecting file: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
       setState(() {
-        _fileName = result.files.single.name; // Always store the filename
-
-        if (kIsWeb) {
-          // For web, store the bytes
-          _fileBytes = result.files.single.bytes;
-          _filePath = null;
-        } else {
-          // For mobile/desktop, store the path
-          _filePath = result.files.single.path;
-          _fileBytes = null;
-        }
+        _isUploading = false;  // End loading state regardless of outcome
       });
     }
   }

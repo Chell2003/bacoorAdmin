@@ -1,7 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({Key? key}) : super(key: key);
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red[400],
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (Scaffold.of(context).hasDrawer) {
+          Navigator.of(context).pop(); // Close drawer if open
+        }
+        
+        // Show loading indicator
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text('Signing out...'),
+              ],
+            ),
+            duration: Duration(seconds: 1),
+          ),
+        );
+
+        await context.read<UserProvider>().signOut();
+        
+        if (context.mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error signing out: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +90,7 @@ class Sidebar extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 16,
-            offset: const Offset(2, 0),
+            offset: const Offset(2, 0), 
           ),
         ],
       ),
@@ -135,6 +204,7 @@ class Sidebar extends StatelessWidget {
                 route: '/login',
                 isSelected: false,
                 isLogout: true,
+                onTap: () => _handleLogout(context),
               ),
             ),
           ],
@@ -150,6 +220,7 @@ class Sidebar extends StatelessWidget {
     required String route,
     required bool isSelected,
     bool isLogout = false,
+    VoidCallback? onTap,
   }) {
     final color = isLogout ? Colors.red[400] : Colors.grey[700];
     final selectedColor = Colors.blue[700];
@@ -167,14 +238,15 @@ class Sidebar extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            if (!isSelected) {
-              if (Scaffold.of(context).hasDrawer) {
-                Navigator.of(context).pop();
-              }
-              Navigator.pushNamed(context, route);
-            }
-          },
+          onTap: onTap ??
+              () {
+                if (!isSelected) {
+                  if (Scaffold.of(context).hasDrawer) {
+                    Navigator.of(context).pop();
+                  }
+                  Navigator.pushNamed(context, route);
+                }
+              },
           hoverColor: hoverColor,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

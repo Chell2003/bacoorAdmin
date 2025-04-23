@@ -85,8 +85,6 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
       String downloadUrl = await ref.getDownloadURL();
 
       // Store metadata in Firestore
-      // In the _uploadFile() method, when adding to Firestore:
-
       await FirebaseFirestore.instance.collection('ar_objects').add({
         'title': _titleController.text,
         'description': _descriptionController.text,

@@ -10,6 +10,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Map<String, int> dashboardMetrics = {
     'Users': 0,
@@ -36,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       var placesSnapshot = await _firestore.collection('places').get();
 
       var objectsSnapshot = await _firestore.collection('objects').get();
-      
+
       var pendingForumsSnapshot = await _firestore
           .collection('forums')
           .where('status', isEqualTo: 'Pending')
@@ -73,19 +74,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 1100;
-    
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: isSmallScreen ? Sidebar() : null,
       body: Row(
         children: [
           if (!isSmallScreen) Sidebar(),
-          if (isSmallScreen)
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         IconButton(
                           icon: const Icon(Icons.menu),
                           onPressed: () {
-                            Scaffold.of(context).openDrawer();
+                            _scaffoldKey.currentState?.openDrawer();
                           },
                         ),
                     ],
@@ -126,7 +122,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               runSpacing: 24,
                               children: [
                                 SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
+                                  width: constraints.maxWidth > 900
+                                      ? (constraints.maxWidth - 48) / 3
+                                      : constraints.maxWidth,
                                   child: _buildStatisticsCard(
                                     title: 'Total Places',
                                     value: dashboardMetrics['Places']?.toString() ?? '0',
@@ -135,7 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
+                                  width: constraints.maxWidth > 900
+                                      ? (constraints.maxWidth - 48) / 3
+                                      : constraints.maxWidth,
                                   child: _buildStatisticsCard(
                                     title: 'Total Objects',
                                     value: dashboardMetrics['Objects']?.toString() ?? '0',
@@ -144,7 +144,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
+                                  width: constraints.maxWidth > 900
+                                      ? (constraints.maxWidth - 48) / 3
+                                      : constraints.maxWidth,
                                   child: _buildStatisticsCard(
                                     title: 'Total Users',
                                     value: dashboardMetrics['Users']?.toString() ?? '0',
@@ -158,60 +160,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 24),
                         LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children: [
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Pending Forums',
-                                    value: dashboardMetrics['Pending Forums']?.toString() ?? '0',
-                                    icon: Icons.pending_actions,
-                                    iconColor: Colors.orange[600]!,
+                            builder: (context, constraints) {
+                              return Wrap(
+                                spacing: 24,
+                                runSpacing: 24,
+                                children: [
+                                  SizedBox(
+                                    width: constraints.maxWidth > 900
+                                        ? (constraints.maxWidth - 48) / 3
+                                        : constraints.maxWidth,
+                                    child: _buildStatisticsCard(
+                                      title: 'Pending Forums',
+                                      value: dashboardMetrics['Pending Forums']?.toString() ?? '0',
+                                      icon: Icons.pending_actions,
+                                      iconColor: Colors.orange[600]!,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Approved Forums',
-                                    value: dashboardMetrics['Approved Forums']?.toString() ?? '0',
-                                    icon: Icons.check_circle,
-                                    iconColor: Colors.green[600]!,
+                                  SizedBox(
+                                    width: constraints.maxWidth > 900
+                                        ? (constraints.maxWidth - 48) / 3
+                                        : constraints.maxWidth,
+                                    child: _buildStatisticsCard(
+                                      title: 'Approved Forums',
+                                      value: dashboardMetrics['Approved Forums']?.toString() ?? '0',
+                                      icon: Icons.check_circle,
+                                      iconColor: Colors.green[600]!,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Rejected Forums',
-                                    value: dashboardMetrics['Rejected Forums']?.toString() ?? '0',
-                                    icon: Icons.cancel,
-                                    iconColor: Colors.red[600]!,
+                                  SizedBox(
+                                    width: constraints.maxWidth > 900
+                                        ? (constraints.maxWidth - 48) / 3
+                                        : constraints.maxWidth,
+                                    child: _buildStatisticsCard(
+                                      title: 'Rejected Forums',
+                                      value: dashboardMetrics['Rejected Forums']?.toString() ?? '0',
+                                      icon: Icons.cancel,
+                                      iconColor: Colors.red[600]!,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          }
+                                ],
+                              );
+                            }
                         ),
                         const SizedBox(height: 24),
                         LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children: [
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                                  child: _buildPlacesList(),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                                  child: _buildUsersList(),
-                                ),
-                              ],
-                            );
-                          }
+                            builder: (context, constraints) {
+                              return Wrap(
+                                spacing: 24,
+                                runSpacing: 24,
+                                children: [
+                                  SizedBox(
+                                    width: constraints.maxWidth > 900
+                                        ? (constraints.maxWidth - 24) / 2
+                                        : constraints.maxWidth,
+                                    child: _buildPlacesList(),
+                                  ),
+                                  SizedBox(
+                                    width: constraints.maxWidth > 900
+                                        ? (constraints.maxWidth - 24) / 2
+                                        : constraints.maxWidth,
+                                    child: _buildUsersList(),
+                                  ),
+                                ],
+                              );
+                            }
                         ),
                       ],
                     ),
@@ -222,7 +234,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      drawer: isSmallScreen ? Sidebar() : null,
     );
   }
 
@@ -280,7 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue[600]),
-                  onPressed: () => _fetchDashboardMetrics(),
+                  onPressed: _fetchDashboardMetrics,
                 ),
               ],
             ),
@@ -290,9 +301,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             stream: _firestore
                 .collection('places')
                 .orderBy('timestamp', descending: true)
+                .limit(10)  // Added limit to prevent loading too many items
                 .snapshots(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
@@ -301,8 +313,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
 
-              final places = snapshot.data!.docs;
-              
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Error loading places',
+                      style: TextStyle(color: Colors.red[600]),
+                    ),
+                  ),
+                );
+              }
+
+              final places = snapshot.data?.docs ?? [];
+
               if (places.isEmpty) {
                 return Center(
                   child: Padding(
@@ -315,9 +339,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
 
-              return Container(
-                height: 400, // Fixed height for the list container
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 400),
                 child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const ClampingScrollPhysics(),
                   itemCount: places.length,
                   separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
                   itemBuilder: (context, index) {
@@ -342,7 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       title: Text(
-                        place['title'] ?? '',
+                        place['title'] ?? 'Untitled Place',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -356,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          place['category'] ?? '',
+                          place['category'] ?? 'Uncategorized',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.blue[700],
@@ -429,7 +455,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.green[600]),
-                  onPressed: () => _fetchDashboardMetrics(),
+                  onPressed: _fetchDashboardMetrics,
                 ),
               ],
             ),
@@ -439,9 +465,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             stream: _firestore
                 .collection('users')
                 .where('role', isNotEqualTo: 'Admin')
+                .limit(10)  // Added limit to prevent loading too many items
                 .snapshots(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
@@ -450,8 +477,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
 
-              final users = snapshot.data!.docs;
-              
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Error loading users',
+                      style: TextStyle(color: Colors.red[600]),
+                    ),
+                  ),
+                );
+              }
+
+              final users = snapshot.data?.docs ?? [];
+
               if (users.isEmpty) {
                 return Center(
                   child: Padding(
@@ -464,9 +503,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
 
-              return Container(
-                height: 400, // Fixed height for the list container
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 400),
                 child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const ClampingScrollPhysics(),
                   itemCount: users.length,
                   separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
                   itemBuilder: (context, index) {
@@ -477,7 +518,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         backgroundColor: Colors.green[50],
                         radius: 20,
                         child: Text(
-                          (user['username'] as String).substring(0, 1).toUpperCase(),
+                          (user['username'] as String? ?? '?').substring(0, 1).toUpperCase(),
                           style: TextStyle(
                             color: Colors.green[700],
                             fontWeight: FontWeight.w600,
@@ -485,7 +526,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       title: Text(
-                        user['username'] ?? '',
+                        user['username'] ?? 'Unknown User',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -495,18 +536,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: user['status'] == 'Active' 
-                            ? Colors.red[50] 
-                            : Colors.green[50],
+                          color: (user['status'] == 'Active' || user['status'] == null)
+                              ? Colors.red[50]
+                              : Colors.green[50],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           user['status'] ?? 'Unknown',
                           style: TextStyle(
                             fontSize: 12,
-                            color: user['status'] == 'Active' 
-                              ? Colors.red[700] 
-                              : Colors.green[700],
+                            color: (user['status'] == 'Active' || user['status'] == null)
+                                ? Colors.red[700]
+                                : Colors.green[700],
                             fontWeight: FontWeight.w500,
                           ),
                         ),

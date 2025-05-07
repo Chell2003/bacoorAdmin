@@ -35,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       var placesSnapshot = await _firestore.collection('places').get();
 
-      // var objectsSnapshot = await _firestore.collection('objects').get();
+      var objectsSnapshot = await _firestore.collection('objects').get();
       
       var pendingForumsSnapshot = await _firestore
           .collection('forums')
@@ -56,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         dashboardMetrics = {
           'Users': usersSnapshot.docs.length,
           'Places': placesSnapshot.docs.length,
-          // 'Objects': objectsSnapshot.docs.length,
+          'Objects': objectsSnapshot.docs.length,
           'Pending Forums': pendingForumsSnapshot.docs.length,
           'Approved Forums': approvedForumsSnapshot.docs.length,
           'Rejected Forums': rejectedForumsSnapshot.docs.length,

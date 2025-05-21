@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
-import '../utils/app_theme.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({Key? key}) : super(key: key);
@@ -10,16 +9,16 @@ class Sidebar extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirm Logout', style: Theme.of(context).textTheme.headline6),
-        content: Text('Are you sure you want to log out?', style: Theme.of(context).textTheme.bodyText1),
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            child: const Text('Cancel'),
           ),
           TextButton(
             style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.red[400],
             ),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Logout'),
@@ -44,15 +43,14 @@ class Sidebar extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text('Signing out...', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                SizedBox(width: 12),
+                Text('Signing out...'),
               ],
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            duration: const Duration(seconds: 1),
+            duration: Duration(seconds: 1),
           ),
         );
 
@@ -65,8 +63,8 @@ class Sidebar extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error signing out: ${e.toString()}', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-              backgroundColor: Theme.of(context).colorScheme.error,
+              content: Text('Error signing out: ${e.toString()}'),
+              backgroundColor: Colors.red,
             ),
           );
         }
@@ -83,14 +81,14 @@ class Sidebar extends StatelessWidget {
       width: isDrawer ? MediaQuery.of(context).size.width * 0.85 : 280,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Colors.white,
         borderRadius: isDrawer ? BorderRadius.circular(0) : const BorderRadius.only(
           topRight: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 16,
             offset: const Offset(2, 0), 
           ),
@@ -104,7 +102,7 @@ class Sidebar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Theme.of(context).dividerColor),
+                  bottom: BorderSide(color: Colors.grey[100]!),
                 ),
               ),
               child: Row(
@@ -113,30 +111,35 @@ class Sidebar extends StatelessWidget {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.8)],
+                        colors: [Colors.blue[400]!, Colors.blue[600]!],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          color: Colors.blue[300]!.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(Icons.admin_panel_settings, color: Theme.of(context).colorScheme.onPrimary, size: 24),
+                    child: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Text(
                     "BACOORDINATES",
-                    style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.grey[900],
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   if (isDrawer) const Spacer(),
                   if (isDrawer)
                     IconButton(
-                      icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodyText1?.color?.withOpacity(0.7)),
+                      icon: Icon(Icons.close, color: Colors.grey[600]),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                 ],
@@ -191,7 +194,7 @@ class Sidebar extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: Theme.of(context).dividerColor),
+                  top: BorderSide(color: Colors.grey[200]!),
                 ),
               ),
               child: _buildNavItem(
@@ -219,24 +222,16 @@ class Sidebar extends StatelessWidget {
     bool isLogout = false,
     VoidCallback? onTap,
   }) {
-    final Color? itemColor = isLogout 
-        ? Theme.of(context).colorScheme.error 
-        : Theme.of(context).textTheme.bodyText1?.color?.withOpacity(0.7);
-    
-    final Color selectedItemColor = Theme.of(context).colorScheme.primary;
-    
-    final Color hoverBgColor = isLogout 
-        ? Theme.of(context).colorScheme.error.withOpacity(0.1)
-        : Theme.of(context).colorScheme.primary.withOpacity(0.05);
-    
-    final Color selectedBgColor = Theme.of(context).colorScheme.primary.withOpacity(0.1);
+    final color = isLogout ? Colors.red[400] : Colors.grey[700];
+    final selectedColor = Colors.blue[700];
+    final hoverColor = isLogout ? Colors.red[50] : Colors.blue[50];
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: isSelected ? selectedBgColor : Colors.transparent,
+        color: isSelected ? Colors.blue[50] : Colors.transparent,
       ),
       child: Material(
         color: Colors.transparent,
@@ -252,7 +247,7 @@ class Sidebar extends StatelessWidget {
                   Navigator.pushNamed(context, route);
                 }
               },
-          hoverColor: hoverBgColor,
+          hoverColor: hoverColor,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Row(
@@ -263,21 +258,23 @@ class Sidebar extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     color: isSelected 
-                      ? selectedItemColor.withOpacity(0.1)
+                      ? selectedColor?.withOpacity(0.1)
                       : Colors.transparent,
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: isSelected ? selectedItemColor : itemColor,
+                    color: isSelected ? selectedColor : color,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                    color: isSelected ? selectedItemColor : itemColor,
+                  style: TextStyle(
+                    color: isSelected ? selectedColor : color,
+                    fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 if (isSelected) ...[
@@ -287,7 +284,7 @@ class Sidebar extends StatelessWidget {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: selectedItemColor,
+                      color: selectedColor,
                     ),
                   ),
                 ],

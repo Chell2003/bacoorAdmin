@@ -25,7 +25,7 @@ class ResponsiveMetricsRow extends StatelessWidget {
           itemBuilder: (context, index) {
             String key = dashboardMetrics.keys.elementAt(index);
             int value = dashboardMetrics[key]!;
-            return _minimalistCard(context, key, value); // Pass context
+            return _minimalistCard(key, value);
           },
         );
       },
@@ -33,13 +33,13 @@ class ResponsiveMetricsRow extends StatelessWidget {
   }
 
   // 🟢 Minimalist Card (Big Icon Left, Text Right)
-  Widget _minimalistCard(BuildContext context, String title, int value) { // Added BuildContext
+  Widget _minimalistCard(String title, int value) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface, // Updated color
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor), // Updated border color
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -50,13 +50,13 @@ class ResponsiveMetricsRow extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest, // Updated icon background
+              color: Colors.grey[100],
               shape: BoxShape.circle,
             ),
             child: Icon(
               _getIconForMetric(title),
               size: 56, // Bigger icon
-              color: Theme.of(context).colorScheme.onSurfaceVariant, // Updated icon color
+              color: Colors.black87,
             ),
           ),
 
@@ -65,11 +65,11 @@ class ResponsiveMetricsRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _animatedNumber(context, value, Theme.of(context).colorScheme.onSurface), // Pass context and updated color
+              _animatedNumber(value, Colors.black87),
               SizedBox(height: 6),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), // Updated text style
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
             ],
           ),
@@ -79,17 +79,14 @@ class ResponsiveMetricsRow extends StatelessWidget {
   }
 
   // 🎯 Smooth Number Animation
-  Widget _animatedNumber(BuildContext context, int value, Color color) { // Added BuildContext, color is now explicitly passed
+  Widget _animatedNumber(int value, Color color) {
     return TweenAnimationBuilder<int>(
       tween: IntTween(begin: 0, end: value),
       duration: Duration(seconds: 1),
       builder: (context, animatedValue, child) {
         return Text(
           animatedValue.toString(),
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith( // Using a theme style for consistency
-                fontWeight: FontWeight.bold, 
-                color: color // Use passed color
-              ),
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: color),
         );
       },
     );

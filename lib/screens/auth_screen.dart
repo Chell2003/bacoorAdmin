@@ -30,8 +30,8 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString(), style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -39,17 +39,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Using scaffoldBackgroundColor which is set to white in app_theme.dart
-    // This effectively uses colorScheme.surfaceContainerLowest behavior if it's white.
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, 
+      backgroundColor: Colors.blueGrey[50],
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            // Card background should default to Theme.of(context).colorScheme.surface which is white
             child: Padding(
               padding: const EdgeInsets.all(32.0),
               child: Form(
@@ -60,12 +57,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
                     Column(
                       children: [
-                        Icon(Icons.admin_panel_settings, size: 60, color: Theme.of(context).colorScheme.primary),
+                        const Icon(Icons.admin_panel_settings, size: 60, color: Colors.blueAccent),
                         const SizedBox(height: 12),
                         Text(
                           "Admin Login",
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueGrey[800]),
                         ),
                       ],
                     ),
@@ -74,7 +71,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: _inputDecoration(context, "Email", Icons.email_outlined),
+                      decoration: _inputDecoration("Email", Icons.email_outlined),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
@@ -87,7 +84,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration: _inputDecoration(context, "Password", Icons.lock_outline),
+                      decoration: _inputDecoration("Password", Icons.lock_outline),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
@@ -101,7 +98,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _resetPassword,
-                        child: Text("Forgot Password?", style: TextStyle(color: Theme.of(context).colorScheme.secondary)), // Yellow
+                        child: const Text("Forgot Password?", style: TextStyle(color: Colors.blueAccent)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -111,14 +108,13 @@ class _AuthScreenState extends State<AuthScreen> {
                         return ElevatedButton(
                           onPressed: userProvider.isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary, // Blue
-                            foregroundColor: Theme.of(context).colorScheme.onPrimary, // White
+                            backgroundColor: Colors.blueAccent,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           child: userProvider.isLoading
-                              ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary) // White
-                              : const Text('Login', style: TextStyle(fontSize: 16)),
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text('Login', style: TextStyle(fontSize: 16, color: Colors.white)),
                         );
                       },
                     ),
@@ -135,9 +131,9 @@ class _AuthScreenState extends State<AuthScreen> {
   void _resetPassword() async {
     if (emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Enter your email to reset password.", style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        const SnackBar(
+          content: Text("Enter your email to reset password."),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -145,43 +141,36 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await context.read<UserProvider>().resetPassword(emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Password reset email sent!", style: TextStyle(color: Theme.of(context).colorScheme.onTertiary)), // Black text
-          backgroundColor: Theme.of(context).colorScheme.tertiary, // Yellow background
+        const SnackBar(
+          content: Text("Password reset email sent!"),
+          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error: ${e.toString()}", style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text("Error: ${e.toString()}"),
+          backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  InputDecoration _inputDecoration(BuildContext context, String label, IconData icon) {
-    // Using Theme.of(context).inputDecorationTheme as the base
-    final themeInputDecoration = Theme.of(context).inputDecorationTheme;
-
+  InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: themeInputDecoration.labelStyle,
-      prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
-      // Using enabledBorder and focusedBorder from global theme if not overridden explicitly
-      enabledBorder: themeInputDecoration.enabledBorder ?? OutlineInputBorder(
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+        borderSide: BorderSide(color: Colors.grey[400]!),
       ),
-      focusedBorder: themeInputDecoration.focusedBorder ?? OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
       ),
-      // Using fillColor from global theme
-      fillColor: themeInputDecoration.fillColor ?? Theme.of(context).colorScheme.surfaceContainerHighest, 
+      fillColor: Colors.white,
       filled: true,
-      // Ensure border property is also consistent if needed, or rely on enabled/focused
-      border: themeInputDecoration.border ?? OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }

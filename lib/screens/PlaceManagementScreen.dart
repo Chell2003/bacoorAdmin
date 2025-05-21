@@ -39,7 +39,6 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
 
   @override
   void dispose() {
-    // Dispose all controllers
     imageUrlController.dispose();
     titleController.dispose();
     descriptionController.dispose();
@@ -69,45 +68,45 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
       await context.read<PlaceProvider>().addPlace(place);
       _resetForm();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Place added successfully', style: TextStyle(color: Theme.of(context).colorScheme.onTertiary)),
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        const SnackBar(
+          content: Text('Place added successfully'),
+          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error adding place: $e', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text('Error adding place: $e'),
+          backgroundColor: Colors.red,
         ),
       );
     }
   }
 
   void _resetForm() {
-    _formKey.currentState?.reset(); // Resets validation state
+    _formKey.currentState?.reset();
     imageUrlController.clear();
     titleController.clear();
     descriptionController.clear();
     latController.clear();
     longController.clear();
-    setState(() => selectedCategory = "Churches"); // Reset to default category
+    setState(() => selectedCategory = "Churches");
   }
 
   Future<void> _deletePlace(String placeId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Place', style: Theme.of(context).textTheme.headline6),
-        content: Text('Are you sure you want to delete this place?', style: Theme.of(context).textTheme.bodyText1),
+        title: const Text('Delete Place'),
+        content: const Text('Are you sure you want to delete this place?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -117,16 +116,16 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
       try {
         await context.read<PlaceProvider>().deletePlace(placeId);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Place deleted successfully', style: TextStyle(color: Theme.of(context).colorScheme.onTertiary)),
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
+          const SnackBar(
+            content: Text('Place deleted successfully'),
+            backgroundColor: Colors.green,
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error deleting place: $e', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text('Error deleting place: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -134,6 +133,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
   }
 
   Future<void> _editPlace(PlaceModel place) async {
+    // Create temporary controllers with existing values
     final editImageUrlController = TextEditingController(text: place.imageUrl);
     final editTitleController = TextEditingController(text: place.title);
     final editDescriptionController = TextEditingController(text: place.description);
@@ -141,130 +141,127 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     final editLongController = TextEditingController(text: place.long.toString());
     String editCategory = place.category;
 
-    final formKey = GlobalKey<FormState>(); // Key for the form inside the dialog
+    final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Consistent border radius
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.5, // Adjust width as needed
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.edit, size: 20, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Edit Place',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Form(
-                key: formKey,
-                child: SingleChildScrollView( // Ensure content is scrollable if it overflows
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildTextField("Image URL", editImageUrlController, contextForDialog: context), // Pass context for theming
-                      const SizedBox(height: 16),
-                      _buildTextField("Title", editTitleController, contextForDialog: context),
-                      const SizedBox(height: 16),
-                      _buildTextField("Description", editDescriptionController, maxLines: 3, contextForDialog: context),
-                      const SizedBox(height: 16),
-                      StatefulBuilder( // To update DropdownButtonFormField within the dialog
-                        builder: (BuildContext context, StateSetter setState) {
-                          return DropdownButtonFormField<String>(
-                            value: editCategory,
-                            items: categories.map((category) {
-                              return DropdownMenuItem(
-                                value: category,
-                                child: Text(category, style: Theme.of(context).textTheme.bodyLarge),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => editCategory = value);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'Category',
-                              labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                              filled: true,
-                              fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                              ),
-                            ),
-                          );
-                        },
+          width: MediaQuery.of(context).size.width * 0.5,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.edit, size: 20, color: Colors.blue[600]),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Edit Place',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              "Latitude",
-                              editLatController,
-                              keyboardType: TextInputType.number,
-                              contextForDialog: context
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTextField("Image URL", editImageUrlController),
+                        const SizedBox(height: 16),
+                        _buildTextField("Title", editTitleController),
+                        const SizedBox(height: 16),
+                        _buildTextField("Description", editDescriptionController, maxLines: 3),
+                        const SizedBox(height: 16),
+                        StatefulBuilder(
+                          builder: (context, setState) {
+                            return DropdownButtonFormField<String>(
+                              value: editCategory,
+                              items: categories.map((category) {
+                                return DropdownMenuItem(value: category, child: Text(category));
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => editCategory = value);
+                                }
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'Category',
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Colors.grey[200]!),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Colors.grey[200]!),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Colors.blue[400]!),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                "Latitude",
+                                editLatController,
+                                keyboardType: TextInputType.number,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              "Longitude",
-                              editLongController,
-                              keyboardType: TextInputType.number,
-                              contextForDialog: context
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildTextField(
+                                "Longitude",
+                                editLongController,
+                                keyboardType: TextInputType.number,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (formKey.currentState?.validate() ?? false) {
-                                Navigator.pop(context, true);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
                             ),
-                            child: const Text('Save Changes'),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                if (formKey.currentState?.validate() ?? false) {
+                                  Navigator.pop(context, true);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Save Changes'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -282,27 +279,28 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
           long: editLongController.text,
           likes: place.likes,
           likedBy: place.likedBy,
-          timestamp: place.timestamp, // Keep original timestamp
+          timestamp: place.timestamp,
         );
 
         await context.read<PlaceProvider>().updatePlace(updatedPlace);
         
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Place updated successfully', style: TextStyle(color: Theme.of(context).colorScheme.onTertiary)),
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
+          const SnackBar(
+            content: Text('Place updated successfully'),
+            backgroundColor: Colors.green,
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating place: $e', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text('Error updating place: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
     }
 
+    // Clean up controllers
     editImageUrlController.dispose();
     editTitleController.dispose();
     editDescriptionController.dispose();
@@ -313,7 +311,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: Row(
         children: [
           Sidebar(),
@@ -328,7 +326,11 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                     children: [
                       Text(
                         'Place Management',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                       Container(
                         width: 300,
@@ -341,21 +343,20 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Search places...',
-                            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor),
-                            prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            fillColor: Colors.grey[50],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                              borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                              borderSide: BorderSide(color: Colors.grey[200]!),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                              borderSide: BorderSide(color: Colors.blue[400]!),
                             ),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
@@ -373,7 +374,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                         Expanded(
                           flex: 3,
                           child: SingleChildScrollView(
-                            child: _buildAddPlaceForm(context), // Pass context for theming
+                            child: _buildAddPlaceForm(),
                           ),
                         ),
                         const SizedBox(width: 24),
@@ -383,6 +384,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                             builder: (context, provider, child) {
                               var places = provider.places;
                               
+                              // Filter places based on search query
                               if (_searchQuery.isNotEmpty) {
                                 places = places.where((place) {
                                   return place.title.toLowerCase().contains(_searchQuery) ||
@@ -392,9 +394,9 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
 
                               return Container(
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Theme.of(context).dividerColor),
+                                  border: Border.all(color: Colors.grey[200]!),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,26 +411,34 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                               Container(
                                                 padding: const EdgeInsets.all(8),
                                                 decoration: BoxDecoration(
-                                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                                  color: Colors.blue[50],
                                                   borderRadius: BorderRadius.circular(6),
                                                 ),
-                                                child: Icon(Icons.place, color: Theme.of(context).colorScheme.primary, size: 20),
+                                                child: Icon(Icons.place, color: Colors.blue[600], size: 20),
                                               ),
                                               const SizedBox(width: 12),
                                               Text(
                                                 "Places List",
-                                                style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black87,
+                                                ),
                                               ),
                                             ],
                                           ),
                                           Text(
                                             '${places.length} Places',
-                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    Divider(height: 1, color: Theme.of(context).dividerColor),
+                                    Divider(height: 1, color: Colors.grey[200]),
                                     if (places.isEmpty)
                                       Center(
                                         child: Padding(
@@ -439,20 +449,27 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                               Icon(
                                                 Icons.place_outlined,
                                                 size: 48,
-                                                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                                color: Colors.grey[400],
                                               ),
                                               const SizedBox(height: 16),
                                               Text(
                                                 _searchQuery.isEmpty 
                                                   ? 'No places added yet'
                                                   : 'No places found',
-                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.grey[600],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                               if (_searchQuery.isNotEmpty) ...[
                                                 const SizedBox(height: 8),
                                                 Text(
                                                   'Try adjusting your search',
-                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.grey[500],
+                                                  ),
                                                 ),
                                               ],
                                             ],
@@ -465,7 +482,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                           padding: const EdgeInsets.symmetric(vertical: 8),
                                           itemCount: places.length,
                                           separatorBuilder: (context, index) => 
-                                              Divider(height: 1, color: Theme.of(context).dividerColor),
+                                              Divider(height: 1, color: Colors.grey[200]),
                                           itemBuilder: (context, index) {
                                             final place = places[index];
                                             return ListTile(
@@ -481,8 +498,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                     return Container(
                                                       width: 60,
                                                       height: 60,
-                                                      color: Theme.of(context).colorScheme.surfaceVariant,
-                                                      child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                                                      color: Colors.grey[100],
+                                                      child: Icon(Icons.image, color: Colors.grey[400]),
                                                     );
                                                   },
                                                 ),
@@ -492,15 +509,18 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                   Expanded(
                                                     child: Text(
                                                       place.title,
-                                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Theme.of(context).colorScheme.onSurface
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w500,
                                                       ),
                                                     ),
                                                   ),
                                                   Text(
                                                     '${place.lat}, ${place.long}',
-                                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[600],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -510,7 +530,10 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                   const SizedBox(height: 4),
                                                   Text(
                                                     place.description,
-                                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.grey[600],
+                                                    ),
                                                     maxLines: 2,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
@@ -520,23 +543,27 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                       Container(
                                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                                         decoration: BoxDecoration(
-                                                          color: Theme.of(context).colorScheme.secondaryContainer,
+                                                          color: Colors.blue[50],
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
                                                         child: Text(
                                                           place.category,
-                                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                            color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                                            fontWeight: FontWeight.w500
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Colors.blue[700],
+                                                            fontWeight: FontWeight.w500,
                                                           ),
                                                         ),
                                                       ),
                                                       const SizedBox(width: 8),
-                                                      Icon(Icons.favorite, size: 14, color: Theme.of(context).colorScheme.tertiary),
+                                                      Icon(Icons.favorite, size: 14, color: Colors.red[400]),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         '${place.likes}',
-                                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey[600],
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
@@ -546,12 +573,12 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   IconButton(
-                                                    icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
+                                                    icon: Icon(Icons.edit_outlined, color: Colors.blue[600]),
                                                     onPressed: () => _editPlace(place),
                                                     tooltip: 'Edit place',
                                                   ),
                                                   IconButton(
-                                                    icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
                                                     onPressed: () => _deletePlace(place.id),
                                                     tooltip: 'Delete place',
                                                   ),
@@ -579,13 +606,13 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     );
   }
 
-  Widget _buildAddPlaceForm(BuildContext context) { // Accept BuildContext
+  Widget _buildAddPlaceForm() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Form(
         key: _formKey,
@@ -598,15 +625,19 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: Colors.blue[50],
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(Icons.add_location, color: Theme.of(context).colorScheme.primary, size: 20),
+                  child: Icon(Icons.add_location, color: Colors.blue[600], size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   "Add New Place",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
               ],
             ),
@@ -617,48 +648,50 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
             const SizedBox(height: 16),
             _buildTextField("Description", descriptionController, maxLines: 3),
             const SizedBox(height: 16),
-            _buildCategoryDropdown(context), // Pass context
+            _buildCategoryDropdown(),
             const SizedBox(height: 16),
-            _buildLocationFields(context), // Pass context
+            _buildLocationFields(),
             const SizedBox(height: 24),
-            _buildSubmitButton(context), // Pass context
+            _buildSubmitButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, TextInputType? keyboardType, BuildContext? contextForDialog}) {
-    // Use contextForDialog if provided (for dialogs), otherwise use the widget's context
-    final currentContext = contextForDialog ?? context; 
+  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, TextInputType? keyboardType}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(currentContext).textTheme.labelMedium?.copyWith(color: Theme.of(currentContext).colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: Theme.of(currentContext).textTheme.bodyLarge?.copyWith(color: Theme.of(currentContext).colorScheme.onSurface),
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Theme.of(currentContext).colorScheme.surfaceVariant.withOpacity(0.5),
+            fillColor: Colors.grey[50],
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(currentContext).dividerColor),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(currentContext).dividerColor),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(currentContext).colorScheme.primary, width: 2),
+              borderSide: BorderSide(color: Colors.blue[400]!),
             ),
           ),
           validator: (value) {
@@ -672,22 +705,23 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     );
   }
 
-  Widget _buildCategoryDropdown(BuildContext context) { // Accept BuildContext
+  Widget _buildCategoryDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Category',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: selectedCategory,
           items: categories.map((category) {
-            return DropdownMenuItem(
-              value: category,
-              child: Text(category, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-            );
+            return DropdownMenuItem(value: category, child: Text(category));
           }).toList(),
           onChanged: (value) {
             if (value != null) {
@@ -696,19 +730,19 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+            fillColor: Colors.grey[50],
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+              borderSide: BorderSide(color: Colors.blue[400]!),
             ),
           ),
           validator: (value) {
@@ -722,7 +756,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     );
   }
 
-  Widget _buildLocationFields(BuildContext context) { // Accept BuildContext
+  Widget _buildLocationFields() {
     return Row(
       children: [
         Expanded(
@@ -744,20 +778,23 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context) { // Accept BuildContext
+  Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _addPlace,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: Colors.blue,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: Text(
+        child: const Text(
           "Add Place",
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
       ),
     );

@@ -15,7 +15,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: Row(
         children: [
           Sidebar(),
@@ -24,16 +24,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24.0), // Consistent padding
+                  padding: const EdgeInsets.all(24.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'User Management',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                       Container(
                         width: 300,
@@ -46,25 +47,22 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Search users...',
-                            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Theme.of(context).hintColor,
-                                ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                            // border uses inputDecorationTheme from app_theme.dart
+                            fillColor: Colors.grey[50],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                              borderSide: BorderSide(color: Colors.grey[200]!),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                              borderSide: BorderSide(color: Colors.blue[400]!),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Consistent padding
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
                         ),
                       ),
@@ -102,22 +100,24 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               Icon(
                                 Icons.people_outline,
                                 size: 64,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                color: Colors.grey[400],
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No users found',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    ),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                ),
                               ),
                               if (_searchQuery.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 Text(
                                   'Try adjusting your search',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
                                 ),
                               ],
                             ],
@@ -126,27 +126,26 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       }
 
                       return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0), // Consistent padding
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
                         itemCount: users.length,
                         itemBuilder: (context, index) {
                           final user = users[index].data() as Map<String, dynamic>;
-                          final bool isActive = user['status'] == 'Active';
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 16), // Consistent margin
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Theme.of(context).dividerColor),
+                              border: Border.all(color: Colors.grey[200]!),
                             ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.all(16), // Consistent padding
+                              contentPadding: const EdgeInsets.all(16),
                               leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                backgroundColor: Colors.blue[50],
                                 radius: 24,
                                 child: Text(
                                   (user['username'] as String).substring(0, 1).toUpperCase(),
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    color: Colors.blue[700],
                                     fontWeight: FontWeight.w600,
                                     fontSize: 18,
                                   ),
@@ -154,48 +153,49 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               ),
                               title: Text(
                                 user['username'] ?? '',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const SizedBox(height: 8), // Consistent spacing
+                                  const SizedBox(height: 8),
                                   Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Consistent padding
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: isActive
-                                              ? Theme.of(context).colorScheme.tertiaryContainer // accentColor based
-                                              : Theme.of(context).colorScheme.errorContainer,
+                                          color: user['status'] == 'Active' 
+                                            ? Colors.green[50] 
+                                            : Colors.red[50],
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           user['status'] ?? 'Unknown',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: isActive
-                                                ? Theme.of(context).colorScheme.onTertiaryContainer // accentColor based
-                                                : Theme.of(context).colorScheme.onErrorContainer,
+                                            color: user['status'] == 'Active' 
+                                              ? Colors.green[700] 
+                                              : Colors.red[700],
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 8), // Consistent spacing
+                                      const SizedBox(width: 8),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Consistent padding
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.secondaryContainer,
+                                          color: Colors.blue[50],
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           user['role'] ?? 'User',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                            color: Colors.blue[700],
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -203,12 +203,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                     ],
                                   ),
                                   if (user['email'] != null) ...[
-                                    const SizedBox(height: 4), // Consistent spacing
+                                    const SizedBox(height: 4),
                                     Text(
                                       user['email'],
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
                                   ],
                                 ],
@@ -218,18 +219,16 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 children: [
                                   IconButton(
                                     icon: Icon(
-                                      isActive ? Icons.block : Icons.check_circle,
-                                      color: isActive
-                                          ? Theme.of(context).colorScheme.error
-                                          : Theme.of(context).colorScheme.tertiary, // accentColor
+                                      user['status'] == 'Active' ? Icons.block : Icons.check_circle,
+                                      color: user['status'] == 'Active' ? Colors.red[400] : Colors.green[400],
                                     ),
                                     onPressed: () => _toggleUserStatus(user),
-                                    tooltip: isActive ? 'Block User' : 'Activate User',
+                                    tooltip: user['status'] == 'Active' ? 'Block User' : 'Activate User',
                                   ),
                                   IconButton(
                                     icon: Icon(
                                       Icons.delete_outline,
-                                      color: Theme.of(context).colorScheme.error,
+                                      color: Colors.red[400],
                                     ),
                                     onPressed: () => _deleteUser(user),
                                     tooltip: 'Delete User',
@@ -259,18 +258,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'User ${newStatus == 'Active' ? 'activated' : 'blocked'} successfully',
-            style: TextStyle(color: newStatus == 'Active' ? Theme.of(context).colorScheme.onTertiary : Theme.of(context).colorScheme.onError),
-          ),
-          backgroundColor: newStatus == 'Active' ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.error,
+          content: Text('User ${newStatus == 'Active' ? 'activated' : 'blocked'} successfully'),
+          backgroundColor: newStatus == 'Active' ? Colors.green : Colors.red,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update user status', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        const SnackBar(
+          content: Text('Failed to update user status'),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -280,16 +276,16 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     try {
       await _firestore.collection('users').doc(user['uid']).delete();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User deleted successfully', style: TextStyle(color: Theme.of(context).colorScheme.onTertiary)),
-          backgroundColor: Theme.of(context).colorScheme.tertiary, // Using tertiary for success
+        const SnackBar(
+          content: Text('User deleted successfully'),
+          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to delete user', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        const SnackBar(
+          content: Text('Failed to delete user'),
+          backgroundColor: Colors.red,
         ),
       );
     }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/sidebar.dart';
+import '../utils/app_theme.dart'; // Import app_theme for direct color access if needed
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -75,37 +76,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isSmallScreen = screenSize.width < 1100;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
         children: [
           if (!isSmallScreen) Sidebar(),
-          if (isSmallScreen)
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            ),
+          // The IconButton for menu on small screens is inside the AppBar or body, 
+          // its color will be handled by IconTheme or explicitly if needed.
+          // No direct change here, assuming IconTheme from AppBarTheme works.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
+                Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Dashboard',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                        style: Theme.of(context).textTheme.headline5?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (isSmallScreen)
                         IconButton(
-                          icon: const Icon(Icons.menu),
+                          icon: Icon(Icons.menu, color: Theme.of(context).appBarTheme.iconTheme?.color ?? Theme.of(context).iconTheme.color),
                           onPressed: () {
                             Scaffold.of(context).openDrawer();
                           },
@@ -131,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Total Places',
                                     value: dashboardMetrics['Places']?.toString() ?? '0',
                                     icon: Icons.place,
-                                    iconColor: Colors.blue[600]!,
+                                    iconColor: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 SizedBox(
@@ -140,7 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Total Objects',
                                     value: dashboardMetrics['Objects']?.toString() ?? '0',
                                     icon: Icons.view_in_ar,
-                                    iconColor: Colors.purple[600]!,
+                                    // Assuming purple is a secondary or tertiary color.
+                                    // For now, let's use secondary, or a custom theme color if available.
+                                    iconColor: Theme.of(context).colorScheme.secondary, 
                                   ),
                                 ),
                                 SizedBox(
@@ -149,7 +144,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Total Users',
                                     value: dashboardMetrics['Users']?.toString() ?? '0',
                                     icon: Icons.people,
-                                    iconColor: Colors.green[600]!,
+                                    // Using a themed green, e.g. accentColor or a specific theme color
+                                    iconColor: accentColor, // from app_theme.dart (or Theme.of(context).colorScheme.tertiary if defined)
                                   ),
                                 ),
                               ],
@@ -169,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Pending Forums',
                                     value: dashboardMetrics['Pending Forums']?.toString() ?? '0',
                                     icon: Icons.pending_actions,
-                                    iconColor: Colors.orange[600]!,
+                                    iconColor: Colors.orange[600]!, // Keep as is or map to a theme color if available
                                   ),
                                 ),
                                 SizedBox(
@@ -178,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Approved Forums',
                                     value: dashboardMetrics['Approved Forums']?.toString() ?? '0',
                                     icon: Icons.check_circle,
-                                    iconColor: Colors.green[600]!,
+                                    iconColor: accentColor, // from app_theme.dart
                                   ),
                                 ),
                                 SizedBox(
@@ -187,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Rejected Forums',
                                     value: dashboardMetrics['Rejected Forums']?.toString() ?? '0',
                                     icon: Icons.cancel,
-                                    iconColor: Colors.red[600]!,
+                                    iconColor: Theme.of(context).colorScheme.error,
                                   ),
                                 ),
                               ],
@@ -230,12 +226,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Theme.of(context).shadowColor.withOpacity(0.05),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -259,33 +255,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.blue[50]!,
-                            Colors.blue[100]!,
+                            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.place, color: Colors.blue[600], size: 20),
+                      child: Icon(Icons.place, color: Theme.of(context).colorScheme.primary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       "Recent Places",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[900],
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: Icon(Icons.refresh, color: Colors.blue[600]),
+                  icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
                   onPressed: () => _fetchDashboardMetrics(),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey[200]),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           StreamBuilder<QuerySnapshot>(
             stream: _firestore
                 .collection('places')
@@ -309,7 +301,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'No places added yet',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                 );
@@ -319,7 +311,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 400, // Fixed height for the list container
                 child: ListView.separated(
                   itemCount: places.length,
-                  separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
+                  separatorBuilder: (context, index) => Divider(height: 1, color: Theme.of(context).dividerColor),
                   itemBuilder: (context, index) {
                     final place = places[index].data() as Map<String, dynamic>;
                     return ListTile(
@@ -335,31 +327,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             return Container(
                               width: 48,
                               height: 48,
-                              color: Colors.grey[100],
-                              child: Icon(Icons.image, color: Colors.grey[400], size: 24),
+                              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                              child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 24),
                             );
                           },
                         ),
                       ),
                       title: Text(
                         place['title'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                       ),
                       subtitle: Container(
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           place['category'] ?? '',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -379,12 +367,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Theme.of(context).shadowColor.withOpacity(0.05),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -408,33 +396,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.green[50]!,
-                            Colors.green[100]!,
+                            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+                            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.8),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.people, color: Colors.green[600], size: 20),
+                      child: Icon(Icons.people, color: Theme.of(context).colorScheme.secondary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       "Recent Users",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[900],
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: Icon(Icons.refresh, color: Colors.green[600]),
+                  icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.secondary),
                   onPressed: () => _fetchDashboardMetrics(),
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey[200]),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           StreamBuilder<QuerySnapshot>(
             stream: _firestore
                 .collection('users')
@@ -458,7 +442,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'No users found',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                 );
@@ -468,45 +452,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 400, // Fixed height for the list container
                 child: ListView.separated(
                   itemCount: users.length,
-                  separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
+                  separatorBuilder: (context, index) => Divider(height: 1, color: Theme.of(context).dividerColor),
                   itemBuilder: (context, index) {
                     final user = users[index].data() as Map<String, dynamic>;
+                    final bool isActive = user['status'] == 'Active';
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       leading: CircleAvatar(
-                        backgroundColor: Colors.green[50],
+                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
                         radius: 20,
                         child: Text(
                           (user['username'] as String).substring(0, 1).toUpperCase(),
                           style: TextStyle(
-                            color: Colors.green[700],
+                            color: Theme.of(context).colorScheme.onSecondaryContainer,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                       title: Text(
                         user['username'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                       ),
                       subtitle: Container(
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: user['status'] == 'Active'
-                            ? Colors.red[50]
-                            : Colors.green[50],
+                          color: isActive
+                            ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.7)
+                            : Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7), // Or a specific "success" container
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           user['status'] ?? 'Unknown',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: user['status'] == 'Active'
-                              ? Colors.red[700]
-                              : Colors.green[700],
+                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isActive
+                              ? Theme.of(context).colorScheme.onErrorContainer
+                              : Theme.of(context).colorScheme.onSecondaryContainer, // Or a specific "onSuccess" container
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -543,15 +524,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    iconColor.withOpacity(0.09),
-                    iconColor.withOpacity(0.09),
+                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[100]!),
-                boxShadow: [
+                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.08),
+                    color: Theme.of(context).shadowColor.withOpacity(0.08),
                     spreadRadius: 0,
                     blurRadius: 15,
                     offset: const Offset(0, 5),
@@ -567,21 +548,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          iconColor.withOpacity(0.15),
-                          iconColor.withOpacity(0.25),
+                          iconColor.withOpacity(0.2),
+                          iconColor.withOpacity(0.3),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: iconColor.withOpacity(0.1),
+                          color: iconColor.withOpacity(0.1), // Keep this shadow subtle
                           spreadRadius: 0,
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(icon, color: iconColor, size: 28),
+                    child: Icon(icon, color: iconColor, size: 28), // iconColor is dynamic
                   ),
                   const SizedBox(width: 24),
                   Expanded(
@@ -591,22 +572,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.3,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 10),
                         Text(
                           value,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[900],
-                            letterSpacing: 0.5,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

@@ -6,7 +6,7 @@ import '../providers/place_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PlaceManagementScreen extends StatefulWidget {
-  const PlaceManagementScreen({Key? key}) : super(key: key);
+  const PlaceManagementScreen({super.key});
 
   @override
   _PlaceManagementScreenState createState() => _PlaceManagementScreenState();
@@ -22,7 +22,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _error;
 
   String selectedCategory = "Churches";
@@ -98,8 +98,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Place', style: Theme.of(context).textTheme.headline6),
-        content: Text('Are you sure you want to delete this place?', style: Theme.of(context).textTheme.bodyText1),
+        title: Text('Delete Place', style: Theme.of(context).textTheme.titleLarge),
+        content: Text('Are you sure you want to delete this place?', style: Theme.of(context).textTheme.bodyLarge),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -196,7 +196,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                               labelText: 'Category',
                               labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                               filled: true,
-                              fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -328,9 +328,9 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                     children: [
                       Text(
                         'Place Management',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      Container(
+                      SizedBox(
                         width: 300,
                         child: TextField(
                           controller: _searchController,
@@ -344,7 +344,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                             hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor),
                             prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(color: Theme.of(context).dividerColor),
@@ -481,7 +481,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                                                     return Container(
                                                       width: 60,
                                                       height: 60,
-                                                      color: Theme.of(context).colorScheme.surfaceVariant,
+                                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                                       child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7)),
                                                     );
                                                   },
@@ -646,7 +646,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
           style: Theme.of(currentContext).textTheme.bodyLarge?.copyWith(color: Theme.of(currentContext).colorScheme.onSurface),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Theme.of(currentContext).colorScheme.surfaceVariant.withOpacity(0.5),
+            fillColor: Theme.of(currentContext).colorScheme.surfaceContainerHighest.withOpacity(0.5),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -696,7 +696,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),

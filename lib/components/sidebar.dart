@@ -4,14 +4,14 @@ import '../providers/user_provider.dart';
 import '../utils/app_theme.dart';
 
 class Sidebar extends StatelessWidget {
-  const Sidebar({Key? key}) : super(key: key);
+  const Sidebar({super.key});
 
   Future<void> _handleLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirm Logout', style: Theme.of(context).textTheme.headline6),
-        content: Text('Are you sure you want to log out?', style: Theme.of(context).textTheme.bodyText1),
+        title: Text('Confirm Logout', style: Theme.of(context).textTheme.titleLarge),
+        content: Text('Are you sure you want to log out?', style: Theme.of(context).textTheme.bodyLarge),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -47,12 +47,12 @@ class Sidebar extends StatelessWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Text('Signing out...', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
               ],
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            duration: const Duration(seconds: 1),
+            duration: Duration(seconds: 1),
           ),
         );
 
@@ -131,12 +131,12 @@ class Sidebar extends StatelessWidget {
                   const SizedBox(width: 16),
                   Text(
                     "BACOORDINATES",
-                    style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   if (isDrawer) const Spacer(),
                   if (isDrawer)
                     IconButton(
-                      icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodyText1?.color?.withOpacity(0.7)),
+                      icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7)),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                 ],
@@ -221,7 +221,7 @@ class Sidebar extends StatelessWidget {
   }) {
     final Color? itemColor = isLogout 
         ? Theme.of(context).colorScheme.error 
-        : Theme.of(context).textTheme.bodyText1?.color?.withOpacity(0.7);
+        : Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7);
     
     final Color selectedItemColor = Theme.of(context).colorScheme.primary;
     
@@ -275,7 +275,7 @@ class Sidebar extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: isSelected ? selectedItemColor : itemColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),

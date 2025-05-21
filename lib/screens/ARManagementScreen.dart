@@ -9,6 +9,8 @@ import '../components/sidebar.dart';
 import 'dart:typed_data';
 
 class UploadARObjectScreen extends StatefulWidget {
+  const UploadARObjectScreen({super.key});
+
   @override
   _UploadARObjectScreenState createState() => _UploadARObjectScreenState();
 }
@@ -74,7 +76,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please provide all required information', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
       );
       return;
@@ -174,9 +176,9 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                     children: [
                       Text(
                         'AR Objects Management',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      Container(
+                      SizedBox(
                         width: 300,
                         child: TextField(
                           controller: _arSearchController,
@@ -190,7 +192,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                             hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor),
                             prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(color: Theme.of(context).dividerColor),
@@ -275,7 +277,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
               icon: Icon(Icons.upload_file, size: 20),
               label: Text('Select .glb File'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 textStyle: Theme.of(context).textTheme.labelLarge,
@@ -317,7 +319,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../components/sidebar.dart';
 
 class ForumManagementScreen extends StatefulWidget {
+  const ForumManagementScreen({super.key});
+
   @override
   _ForumManagementScreenState createState() => _ForumManagementScreenState();
 }
@@ -99,7 +101,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                     children: [
                       Text(
                         "Forum Management",
-                        style: Theme.of(context).textTheme.headline5?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
@@ -269,7 +271,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                             margin: EdgeInsets.only(top: 16),
                                             padding: EdgeInsets.all(16),
                                             decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                                              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                                               borderRadius: BorderRadius.circular(12),
                                               border: Border.all(color: Theme.of(context).dividerColor),
                                             ),
@@ -299,7 +301,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                                   return Container(
                                                     height: 200,
                                                     decoration: BoxDecoration(
-                                                      color: Theme.of(context).colorScheme.surfaceVariant,
+                                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                                     ),
                                                     child: Column(
                                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -380,7 +382,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                           icon: Icon(Icons.close_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           tooltip: 'Close comments',
                           style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             padding: EdgeInsets.all(8),
                           ),
                         ),
@@ -456,7 +458,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                               margin: EdgeInsets.only(bottom: 16),
                               padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Theme.of(context).dividerColor),
                               ),
@@ -537,7 +539,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                             return Container(
                                               height: 200,
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.surfaceVariant,
+                                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                               ),
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -611,7 +613,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                        : Theme.of(context).colorScheme.surfaceVariant,
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text( // Count badge text color

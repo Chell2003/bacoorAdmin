@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/sidebar.dart';
 
 class UserManagementScreen extends StatefulWidget {
+  const UserManagementScreen({super.key});
+
   @override
   _UserManagementScreenState createState() => _UserManagementScreenState();
 }
@@ -30,12 +32,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     children: [
                       Text(
                         'User Management',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
-                      Container(
+                      SizedBox(
                         width: 300,
                         child: TextField(
                           controller: _searchController,
@@ -54,7 +56,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                             // border uses inputDecorationTheme from app_theme.dart
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),

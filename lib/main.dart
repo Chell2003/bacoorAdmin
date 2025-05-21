@@ -19,6 +19,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -68,6 +70,8 @@ class MyApp extends StatelessWidget {
 /// It shows a loading indicator while checking auth state, and redirects to
 /// either the dashboard or login screen based on authentication status.
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
@@ -90,8 +94,7 @@ class AuthWrapper extends StatelessWidget {
 /// This is useful for authentication-related navigation where animations
 /// might feel unnecessary or disruptive.
 class NoAnimationRoute<T> extends MaterialPageRoute<T> {
-  NoAnimationRoute({required WidgetBuilder builder, RouteSettings? settings})
-      : super(builder: builder, settings: settings);
+  NoAnimationRoute({required super.builder, super.settings});
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation,

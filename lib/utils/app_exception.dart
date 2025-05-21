@@ -10,16 +10,13 @@ class AppException implements Exception {
 }
 
 class AuthException extends AppException {
-  AuthException(String message, {String? code, dynamic originalError})
-      : super(message, code: code, originalError: originalError);
+  AuthException(super.message, {super.code, super.originalError});
 }
 
 class FirestoreException extends AppException {
-  FirestoreException(String message, {String? code, dynamic originalError})
-      : super(message, code: code, originalError: originalError);
+  FirestoreException(super.message, {super.code, super.originalError});
 }
 
 class ValidationException extends AppException {
-  ValidationException(String message, {String? code, dynamic originalError})
-      : super(message, code: code, originalError: originalError);
+  ValidationException(super.message, {super.code, super.originalError});
 } 

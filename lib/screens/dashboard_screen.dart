@@ -5,6 +5,8 @@ import '../components/sidebar.dart';
 import '../utils/app_theme.dart'; // Import app_theme for direct color access if needed
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
@@ -94,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         'Dashboard',
-                        style: Theme.of(context).textTheme.headline5?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (isSmallScreen)
                         IconButton(
@@ -145,7 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     value: dashboardMetrics['Users']?.toString() ?? '0',
                                     icon: Icons.people,
                                     // Using a themed green, e.g. accentColor or a specific theme color
-                                    iconColor: accentColor, // from app_theme.dart (or Theme.of(context).colorScheme.tertiary if defined)
+                                    iconColor: yellowAccentColor, // from app_theme.dart (or Theme.of(context).colorScheme.tertiary if defined)
                                   ),
                                 ),
                               ],
@@ -174,7 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Approved Forums',
                                     value: dashboardMetrics['Approved Forums']?.toString() ?? '0',
                                     icon: Icons.check_circle,
-                                    iconColor: accentColor, // from app_theme.dart
+                                    iconColor: yellowAccentColor, // from app_theme.dart
                                   ),
                                 ),
                                 SizedBox(
@@ -301,13 +303,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'No places added yet',
-                      style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                 );
               }
 
-              return Container(
+              return SizedBox(
                 height: 400, // Fixed height for the list container
                 child: ListView.separated(
                   itemCount: places.length,
@@ -327,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             return Container(
                               width: 48,
                               height: 48,
-                              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
                               child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 24),
                             );
                           },
@@ -442,13 +444,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       'No users found',
-                      style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                 );
               }
 
-              return Container(
+              return SizedBox(
                 height: 400, // Fixed height for the list container
                 child: ListView.separated(
                   itemCount: users.length,
@@ -524,8 +526,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+                    Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),

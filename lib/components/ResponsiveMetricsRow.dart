@@ -4,9 +4,9 @@ class ResponsiveMetricsRow extends StatelessWidget {
   final Map<String, int> dashboardMetrics;
 
   const ResponsiveMetricsRow({
-    Key? key,
+    super.key,
     required this.dashboardMetrics,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

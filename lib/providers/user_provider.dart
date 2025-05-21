@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firestore_service.dart';
-import '../utils/app_exception.dart';
 import '../models/user_model.dart';
 
 /// Manages user authentication state and user data throughout the application.

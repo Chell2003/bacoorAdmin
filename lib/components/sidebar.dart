@@ -4,7 +4,7 @@ import '../providers/user_provider.dart';
 import '../utils/app_theme.dart';
 
 class Sidebar extends StatelessWidget {
-  const Sidebar({super.key});
+  const Sidebar({Key? key}) : super(key: key);
 
   Future<void> _handleLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -36,7 +36,7 @@ class Sidebar extends StatelessWidget {
         
         // Show loading indicator
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+           SnackBar(
             content: Row(
               children: [
                 SizedBox(
@@ -44,15 +44,15 @@ class Sidebar extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
+                    valueColor: AlwaysStoppedAnimation<Color> (Theme.of(context).colorScheme.onPrimary),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text('Signing out...', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
               ],
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            duration: Duration(seconds: 1),
+            duration: const Duration(seconds: 1),
           ),
         );
 

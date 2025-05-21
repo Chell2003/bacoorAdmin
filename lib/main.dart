@@ -9,6 +9,7 @@ import 'package:admin/screens/PlaceManagementScreen.dart';
 import 'package:admin/screens/UserManagementScreen.dart';
 import 'package:admin/providers/user_provider.dart';
 import 'package:admin/providers/place_provider.dart';
+import 'package:admin/utils/app_theme.dart'; // Import the custom theme
 import 'firebase_options.dart';
 
 void main() async {
@@ -27,10 +28,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'CMS App',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          useMaterial3: true,
-        ),
+        theme: appTheme, // Apply the custom theme
+        // darkTheme: appDarkTheme, // Optional: if you have a dark theme
+        // themeMode: ThemeMode.system, // Optional: set theme mode
         debugShowCheckedModeBanner: false,
         home: AuthWrapper(),
         onGenerateRoute: (settings) {

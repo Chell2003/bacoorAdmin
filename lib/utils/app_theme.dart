@@ -1,16 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Color Palette
-const Color primaryColor = Color(0xFF2A65C8); // Kept as is
-const Color secondaryColor = Color(0xFF333333); // Existing dark secondary, used for text/borders
+// Professional Color Palette
+const Color primaryColor = Color(0xFF1565C0);  // Deeper blue for better contrast
+const Color secondaryColor = Color(0xFF424242); // Dark gray for text
+const Color accentColor = Color(0xFF2E7D32);    // Professional green
+const Color surfaceColor = Color(0xFFFFFFFF);   // White background
 
-// New Accent/Secondary Color
-const Color yellowAccentColor = Color(0xFFFFC107);
-const Color onYellowAccentColor = Colors.black; // For text/icons on yellowAccentColor
+// Semantic Colors
+const Color successColor = Color(0xFF43A047);   // Green
+const Color warningColor = Color(0xFFFFA000);   // Amber
+const Color errorColor = Color(0xFFD32F2F);     // Red
+const Color infoColor = Color(0xFF1976D2);      // Blue
 
-const Color errorColor = Color(0xFFDC3545);
-const Color surfaceColor = Color(0xFFFFFFFF); // White background
+// Additional Colors for UI Elements
+const Color cardBackgroundColor = Color(0xFFFAFAFA);  // Lighter gray for cards
+const Color dividerColor = Color(0xFFEEEEEE);        // Subtle divider
+const Color shadowColor = Color(0x1A000000);         // Transparent black for shadows
+const Color hoverColor = Color(0x0A1565C0);         // Subtle hover effect
+const Color selectedColor = Color(0x1A1565C0);      // Subtle selected state
+
+// Elevation
+const double cardElevation = 2.0;
+const double dialogElevation = 24.0;
+const double dropdownElevation = 8.0;
+
+// Border Radius
+const double borderRadiusSmall = 4.0;
+const double borderRadiusMedium = 8.0;
+const double borderRadiusLarge = 12.0;
+
+// Spacing
+const double spacingXSmall = 4.0;
+const double spacingSmall = 8.0;
+const double spacingMedium = 16.0;
+const double spacingLarge = 24.0;
+const double spacingXLarge = 32.0;
 
 // Typography
 final TextTheme appTextTheme = TextTheme(
@@ -32,85 +57,66 @@ final TextTheme appTextTheme = TextTheme(
 // ThemeData
 final ThemeData appTheme = ThemeData(
   primaryColor: primaryColor,
-  colorScheme: ColorScheme.fromSwatch(
-    primarySwatch: MaterialColor( // Need to provide a swatch for fromSwatch to work correctly
-      primaryColor.value,
-      <int, Color>{
-        50: primaryColor.withOpacity(0.1),
-        100: primaryColor.withOpacity(0.2),
-        200: primaryColor.withOpacity(0.3),
-        300: primaryColor.withOpacity(0.4),
-        400: primaryColor.withOpacity(0.5),
-        500: primaryColor.withOpacity(0.6),
-        600: primaryColor.withOpacity(0.7),
-        700: primaryColor.withOpacity(0.8),
-        800: primaryColor.withOpacity(0.9),
-        900: primaryColor,
-      },
-    ),
-  ).copyWith(
-    primary: primaryColor, // Ensure primary is set
-    secondary: yellowAccentColor, // New yellow secondary
-    onSecondary: onYellowAccentColor, // Contrast color for yellow
-    tertiary: yellowAccentColor, // Using tertiary also for the new accent
-    onTertiary: onYellowAccentColor, // Contrast for tertiary
+  colorScheme: ColorScheme(
+    primary: primaryColor,
+    secondary: accentColor,
+    surface: surfaceColor,
+    background: surfaceColor,
     error: errorColor,
-    surface: surfaceColor, // Standard surface color
-    onSurface: secondaryColor, // Text on app background
+    onPrimary: Colors.white,
+    onSecondary: Colors.white,
+    onSurface: secondaryColor,
+    onBackground: secondaryColor,
+    onError: Colors.white,
+    brightness: Brightness.light,
   ),
-  scaffoldBackgroundColor: surfaceColor, // Changed to white
-  textTheme: appTextTheme.apply(
-    bodyColor: secondaryColor, // Default text color
-    displayColor: secondaryColor,
-  ),
-  appBarTheme: AppBarTheme(
-    backgroundColor: primaryColor, // AppBar still uses primary
-    elevation: 4,
-    titleTextStyle: appTextTheme.titleLarge?.copyWith(color: surfaceColor), // Text on primary appbar
-    iconTheme: const IconThemeData(color: surfaceColor), // Icons on primary appbar
+  textTheme: appTextTheme,
+  cardTheme: CardTheme(
+    elevation: cardElevation,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(borderRadiusMedium),
+    ),
+    color: cardBackgroundColor,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: primaryColor, // Default button is primary
-      foregroundColor: surfaceColor, // Text on primary button
-      textStyle: appTextTheme.labelLarge,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      elevation: 2,
+      padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(borderRadiusSmall),
       ),
     ),
   ),
-  // Example: If you want some buttons to use the accent color:
-  // TextButtonThemeData for text buttons, OutlinedButtonThemeData for outlined ones
-  // You might create specific styles in widgets or a utility class for different button types
-  // e.g., success buttons would now use yellowAccentColor
-  
   inputDecorationTheme: InputDecorationTheme(
-    border: OutlineInputBorder( // Default border for text fields
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)), // Lighter border
-    ),
-    enabledBorder: OutlineInputBorder( // Border when text field is enabled but not focused
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)),
-    ),
-    focusedBorder: OutlineInputBorder( // Border when text field is focused
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: primaryColor, width: 2), // Focused uses primary
-    ),
-    labelStyle: appTextTheme.bodyLarge?.copyWith(color: secondaryColor.withOpacity(0.8)),
-    hintStyle: appTextTheme.bodyMedium?.copyWith(color: secondaryColor.withOpacity(0.6)),
-    errorStyle: appTextTheme.bodySmall?.copyWith(color: errorColor),
     filled: true,
-    fillColor: surfaceColor, // Background of text field
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    fillColor: surfaceColor,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
+      borderSide: const BorderSide(color: dividerColor),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
+      borderSide: const BorderSide(color: dividerColor),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
+      borderSide: BorderSide(color: primaryColor),
+    ),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: spacingMedium,
+      vertical: spacingSmall,
+    ),
   ),
-  // Ensure other component themes are reviewed if they used the old green accent.
-  // For instance, if FloatingActionButtonThemeData used accentColor, update it.
-  // floatingActionButtonTheme: FloatingActionButtonThemeData(
-  //   backgroundColor: yellowAccentColor,
-  //   foregroundColor: onYellowAccentColor,
-  // ),
-  // TabBarTheme, CardTheme, DialogTheme etc. should also be checked.
-  // For now, the explicit changes are made as requested.
+  dividerTheme: const DividerThemeData(
+    space: spacingMedium,
+    thickness: 1,
+    color: dividerColor,
+  ),
+  appBarTheme: AppBarTheme(
+    backgroundColor: surfaceColor,
+    foregroundColor: secondaryColor,
+    elevation: 0,
+    centerTitle: false,
+    titleTextStyle: appTextTheme.titleLarge,
+  ),
 );

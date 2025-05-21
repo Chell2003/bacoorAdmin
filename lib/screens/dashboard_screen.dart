@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/sidebar.dart';
-import '../utils/app_theme.dart'; // Import app_theme for direct color access if needed
+import '../utils/app_theme.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -11,8 +12,10 @@ class DashboardScreen extends StatefulWidget {
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late AnimationController _animationController;
+  late List<Animation<double>> _animations;
 
   Map<String, int> dashboardMetrics = {
     'Users': 0,
@@ -22,11 +25,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'Approved Forums': 0,
     'Rejected Forums': 0,
   };
+  List<Map<String, dynamic>> recentForums = [];
+  List<Map<String, dynamic>> activeUsers = [];
 
   @override
   void initState() {
     super.initState();
     _fetchDashboardMetrics();
+    _fetchRecentForums();
+    _fetchActiveUsers();
+    
+    // Initialize animations
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _animations = List.generate(
+      6,
+      (index) => Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            index * 0.1,
+            (index * 0.1) + 0.5,
+            curve: Curves.easeOut,
+          ),
+        ),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchDashboardMetrics() async {
@@ -38,7 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       var placesSnapshot = await _firestore.collection('places').get();
 
-      // var objectsSnapshot = await _firestore.collection('objects').get();
+      var objectsSnapshot = await _firestore.collection('ar_objects').get();
 
       var pendingForumsSnapshot = await _firestore
           .collection('forums')
@@ -59,7 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         dashboardMetrics = {
           'Users': usersSnapshot.docs.length,
           'Places': placesSnapshot.docs.length,
-          // 'Objects': objectsSnapshot.docs.length,
+          'Objects': objectsSnapshot.docs.length,
           'Pending Forums': pendingForumsSnapshot.docs.length,
           'Approved Forums': approvedForumsSnapshot.docs.length,
           'Rejected Forums': rejectedForumsSnapshot.docs.length,
@@ -72,6 +107,911 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _fetchRecentForums() async {
+    try {
+      var forumsSnapshot = await _firestore
+          .collection('forums')
+          .orderBy('createdAt', descending: true)
+          .limit(5)
+          .get();
+
+      setState(() {
+        recentForums = forumsSnapshot.docs
+            .map((doc) => {
+                  'id': doc.id,
+                  'title': doc['title'] ?? '',
+                  'status': doc['status'] ?? 'Pending',
+                  'author': doc['authorName'] ?? 'Unknown',
+                  'createdAt': doc['createdAt'] as Timestamp,
+                })
+            .toList();
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching recent forums: $e");
+      }
+    }
+  }  Future<void> _fetchActiveUsers() async {
+    try {      var usersSnapshot = await _firestore
+          .collection('users')
+          .where('role', isNotEqualTo: 'Admin')
+          .limit(5)
+          .get();
+
+      setState(() {
+        activeUsers = usersSnapshot.docs
+            .map((doc) {
+              final data = doc.data();
+              return {
+                'id': doc.id,
+                'username': data['username'] ?? 'Unknown User',
+                'email': data['email'] ?? '',
+                'photoURL': data['photoURL'] ?? '',
+                'status': data['status'] ?? 'inactive',
+                'role': data['role'] ?? 'user',
+                'bio': data['bio'] ?? '',
+                'createdAt': data['createdAt'] as Timestamp,
+              };
+            })
+            .toList();
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching active users: $e");
+      }
+    }
+  }
+
+  Widget _buildMetricCard(String title, int value, IconData icon, Color color, Animation<double> animation) {    return ScaleTransition(
+      scale: animation,      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.2),
+              color.withOpacity(0.15),
+              color.withOpacity(0.1),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+          borderRadius: BorderRadius.circular(borderRadiusLarge),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: color.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+              spreadRadius: 0,
+            ),
+          ],
+          border: Border.all(
+            color: color.withOpacity(0.2),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadiusLarge),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                // Handle card tap
+              },
+              child: Stack(
+                children: [
+                  Positioned(
+                    right: -20,
+                    top: -20,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            color.withOpacity(0.1),
+                            color.withOpacity(0.05),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: -20,
+                    bottom: -20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [
+                            color.withOpacity(0.1),
+                            color.withOpacity(0.05),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(spacingLarge),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(spacingSmall),
+                              decoration: BoxDecoration(                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    color.withOpacity(0.2),
+                                    color.withOpacity(0.3),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(borderRadiusMedium),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withOpacity(0.2),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: color.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Icon(icon, color: color, size: 24),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: spacingSmall,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    color.withOpacity(0.1),
+                                    color.withOpacity(0.2),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(borderRadiusSmall),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.trending_up,
+                                    color: color,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '+${value > 10 ? value ~/ 10 : value}',
+                                    style: TextStyle(
+                                      color: color,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: spacingLarge),
+                        TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 1000),
+                          tween: Tween(begin: 0, end: value.toDouble()),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                                height: 1,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: spacingSmall),
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentForumsTable() {
+    return Container(
+      margin: const EdgeInsets.only(top: spacingLarge),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(borderRadiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(spacingLarge),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(spacingSmall),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(borderRadiusMedium),
+                          ),
+                          child: Icon(
+                            Icons.forum_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: spacingMedium),
+                        Text(
+                          'Recent Forum Posts',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: spacingSmall),
+                    Text(
+                      'Latest forum activities and discussions',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/forum');
+                  },
+                  icon: const Icon(Icons.forum_outlined),
+                  label: const Text('View All'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: spacingMedium,
+                      vertical: spacingSmall,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(borderRadiusMedium),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
+                dataTableTheme: DataTableTheme.of(context).copyWith(
+                  headingTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: secondaryColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              child: DataTable(
+                columnSpacing: 24,
+                horizontalMargin: spacingLarge,
+                headingRowHeight: 56,
+                dataRowHeight: 70,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(borderRadiusLarge),
+                ),
+                headingRowColor: MaterialStateProperty.all(
+                  Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                ),
+                dataRowColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.hovered)) {
+                      return Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1);
+                    }
+                    return Colors.transparent;
+                  },
+                ),
+                columns: [
+                  DataColumn(
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(borderRadiusSmall),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.article_outlined,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: spacingSmall),
+                          Text('Title'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(borderRadiusSmall),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: spacingSmall),
+                          Text('Author'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(borderRadiusSmall),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                          const SizedBox(width: spacingSmall),
+                          Text('Status'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(borderRadiusSmall),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(width: spacingSmall),
+                          Text('Date'),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+              rows: recentForums.map((forum) {
+                Color statusColor;
+                IconData statusIcon;
+                switch (forum['status']) {
+                  case 'Approved':
+                    statusColor = successColor;
+                    statusIcon = Icons.check_circle;
+                    break;
+                  case 'Rejected':
+                    statusColor = errorColor;
+                    statusIcon = Icons.cancel;
+                    break;
+                  default:
+                    statusColor = warningColor;
+                    statusIcon = Icons.pending;
+                }
+
+                return DataRow(
+                  cells: [                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: spacingMedium,
+                          vertical: spacingSmall,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(borderRadiusSmall),
+                              ),
+                              child: Icon(
+                                Icons.article_outlined,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: spacingMedium),
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    forum['title'],
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Forum post',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: spacingMedium,
+                          vertical: spacingSmall,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(borderRadiusSmall),
+                              ),
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                                child: Text(
+                                  forum['author'][0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: spacingMedium),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  forum['author'],
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Author',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: spacingMedium,
+                          vertical: spacingSmall,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: spacingMedium,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    statusColor.withOpacity(0.15),
+                                    statusColor.withOpacity(0.25),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(borderRadiusSmall),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: statusColor.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    statusIcon,
+                                    color: statusColor,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    forum['status'],
+                                    style: TextStyle(
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Current status',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: spacingMedium,
+                          vertical: spacingSmall,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(borderRadiusSmall),
+                              ),
+                              child: Icon(
+                                Icons.calendar_today,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(width: spacingMedium),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  DateFormat('MMM d, y').format(
+                                    (forum['createdAt'] as Timestamp).toDate(),
+                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Creation date',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          
+          ),
+        ],
+    ),
+    );
+  }
+
+  Widget _buildUsersTable() {
+    return Container(
+      margin: const EdgeInsets.only(top: spacingLarge),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(borderRadiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(spacingLarge),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(spacingSmall),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(borderRadiusMedium),
+                          ),
+                          child: Icon(
+                            Icons.people_alt_outlined,
+                            color: Theme.of(context).colorScheme.secondary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: spacingMedium),
+                        Text(
+                          'Active Users',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: spacingSmall),
+                    Text(
+                      'List of registered users',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/users');
+                  },
+                  icon: const Icon(Icons.people_alt_outlined),
+                  label: const Text('View All'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: spacingMedium,
+                      vertical: spacingSmall,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(borderRadiusMedium),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Users List
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: spacingLarge),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: activeUsers.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
+              ),
+              itemBuilder: (context, index) {
+                final user = activeUsers[index];
+                final username = user['username'] ?? 'Unknown User';
+                final String initials = username.split(' ')
+                    .map((e) => e.isNotEmpty ? e[0] : '')
+                    .take(2)
+                    .join()
+                    .toUpperCase();
+                final bool isActive = user['status'] == 'active';
+                final String photoURL = user['photoURL'] ?? '';
+                
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: spacingMedium,
+                    vertical: spacingSmall,
+                  ),
+                  leading: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                    backgroundImage: photoURL.isNotEmpty ? NetworkImage(photoURL) : null,
+                    child: photoURL.isEmpty ? Text(
+                      initials,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ) : null,
+                  ),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          username,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: spacingSmall,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive 
+                              ? Colors.green.withOpacity(0.1)
+                              : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(borderRadiusSmall),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.only(right: 6),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isActive ? Colors.green : Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              user['status'] ?? 'inactive',
+                              style: TextStyle(
+                                color: isActive ? Colors.green : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user['email'] ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        user['role'] ?? 'user',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () {
+                      // Show user actions menu
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: spacingLarge),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -80,515 +1020,211 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isSmallScreen) Sidebar(),
-          // The IconButton for menu on small screens is inside the AppBar or body, 
-          // its color will be handled by IconTheme or explicitly if needed.
-          // No direct change here, assuming IconTheme from AppBarTheme works.
+          if (!isSmallScreen) const Sidebar(),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: CustomScrollView(
+              slivers: [                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  elevation: 0,
+                  backgroundColor: surfaceColor,
+                  toolbarHeight: 80,
+                  leading: isSmallScreen
+                      ? IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        )
+                      : null,
+                  title: Row(
                     children: [
-                      Text(
-                        'Dashboard',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (isSmallScreen)
-                        IconButton(
-                          icon: Icon(Icons.menu, color: Theme.of(context).appBarTheme.iconTheme?.color ?? Theme.of(context).iconTheme.color),
-                          onPressed: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children: [
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Total Places',
-                                    value: dashboardMetrics['Places']?.toString() ?? '0',
-                                    icon: Icons.place,
-                                    iconColor: Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Total Objects',
-                                    value: dashboardMetrics['Objects']?.toString() ?? '0',
-                                    icon: Icons.view_in_ar,
-                                    // Assuming purple is a secondary or tertiary color.
-                                    // For now, let's use secondary, or a custom theme color if available.
-                                    iconColor: Theme.of(context).colorScheme.secondary, 
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Total Users',
-                                    value: dashboardMetrics['Users']?.toString() ?? '0',
-                                    icon: Icons.people,
-                                    // Using a themed green, e.g. accentColor or a specific theme color
-                                    iconColor: yellowAccentColor, // from app_theme.dart (or Theme.of(context).colorScheme.tertiary if defined)
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children: [
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Pending Forums',
-                                    value: dashboardMetrics['Pending Forums']?.toString() ?? '0',
-                                    icon: Icons.pending_actions,
-                                    iconColor: Colors.orange[600]!, // Keep as is or map to a theme color if available
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Approved Forums',
-                                    value: dashboardMetrics['Approved Forums']?.toString() ?? '0',
-                                    icon: Icons.check_circle,
-                                    iconColor: yellowAccentColor, // from app_theme.dart
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 48) / 3 : constraints.maxWidth,
-                                  child: _buildStatisticsCard(
-                                    title: 'Rejected Forums',
-                                    value: dashboardMetrics['Rejected Forums']?.toString() ?? '0',
-                                    icon: Icons.cancel,
-                                    iconColor: Theme.of(context).colorScheme.error,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                        ),
-                        const SizedBox(height: 24),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Wrap(
-                              spacing: 24,
-                              runSpacing: 24,
-                              children: [
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                                  child: _buildPlacesList(),
-                                ),
-                                SizedBox(
-                                  width: constraints.maxWidth > 900 ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                                  child: _buildUsersList(),
-                                ),
-                              ],
-                            );
-                          }
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      drawer: isSmallScreen ? Sidebar() : null,
-    );
-  }
-
-  Widget _buildPlacesList() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).dividerColor),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
-                            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.place, color: Theme.of(context).colorScheme.primary, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Recent Places",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
-                  onPressed: () => _fetchDashboardMetrics(),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Theme.of(context).dividerColor),
-          StreamBuilder<QuerySnapshot>(
-            stream: _firestore
-                .collection('places')
-                .orderBy('timestamp', descending: true)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-
-              final places = snapshot.data!.docs;
-
-              if (places.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'No places added yet',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                    ),
-                  ),
-                );
-              }
-
-              return SizedBox(
-                height: 400, // Fixed height for the list container
-                child: ListView.separated(
-                  itemCount: places.length,
-                  separatorBuilder: (context, index) => Divider(height: 1, color: Theme.of(context).dividerColor),
-                  itemBuilder: (context, index) {
-                    final place = places[index].data() as Map<String, dynamic>;
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          place['imageUrl'] ?? '',
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 48,
-                              height: 48,
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                              child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 24),
-                            );
-                          },
-                        ),
-                      ),
-                      title: Text(
-                        place['title'] ?? '',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                      subtitle: Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          place['category'] ?? '',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w500,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Dashboard',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: secondaryColor,
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUsersList() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).dividerColor),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
-                            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.people, color: Theme.of(context).colorScheme.secondary, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Recent Users",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.secondary),
-                  onPressed: () => _fetchDashboardMetrics(),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Theme.of(context).dividerColor),
-          StreamBuilder<QuerySnapshot>(
-            stream: _firestore
-                .collection('users')
-                .where('role', isNotEqualTo: 'Admin')
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-
-              final users = snapshot.data!.docs;
-
-              if (users.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'No users found',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                    ),
-                  ),
-                );
-              }
-
-              return SizedBox(
-                height: 400, // Fixed height for the list container
-                child: ListView.separated(
-                  itemCount: users.length,
-                  separatorBuilder: (context, index) => Divider(height: 1, color: Theme.of(context).dividerColor),
-                  itemBuilder: (context, index) {
-                    final user = users[index].data() as Map<String, dynamic>;
-                    final bool isActive = user['status'] == 'Active';
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
-                        radius: 20,
-                        child: Text(
-                          (user['username'] as String).substring(0, 1).toUpperCase(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSecondaryContainer,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 4),
+                          Text(
+                            'Welcome back, Admin',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: secondaryColor.withOpacity(0.7),
+                            ),
                           ),
-                        ),
-                      ),
-                      title: Text(
-                        user['username'] ?? '',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                      subtitle: Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isActive
-                            ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.7)
-                            : Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7), // Or a specific "success" container
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          user['status'] ?? 'Unknown',
-                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isActive
-                              ? Theme.of(context).colorScheme.onErrorContainer
-                              : Theme.of(context).colorScheme.onSecondaryContainer, // Or a specific "onSuccess" container
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticsCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: TweenAnimationBuilder(
-        duration: const Duration(milliseconds: 300),
-        tween: Tween<double>(begin: 1, end: 1),
-        builder: (context, double scale, child) {
-          return Transform.scale(
-            scale: scale,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                    Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
-                 boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).shadowColor.withOpacity(0.08),
-                    spreadRadius: 0,
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          iconColor.withOpacity(0.2),
-                          iconColor.withOpacity(0.3),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: iconColor.withOpacity(0.1), // Keep this shadow subtle
-                          spreadRadius: 0,
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(icon, color: iconColor, size: 28), // iconColor is dynamic
+                    ],
                   ),
-                  const SizedBox(width: 24),
-                  Expanded(
+                  actions: [
+                    Container(
+                      margin: const EdgeInsets.only(right: spacingMedium),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: spacingSmall,
+                        vertical: spacingXSmall,
+                      ),
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        borderRadius: BorderRadius.circular(borderRadiusMedium),
+                        border: Border.all(
+                          color: dividerColor,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                          const SizedBox(width: spacingSmall),
+                          Text(
+                            DateFormat('MMMM d, y').format(DateTime.now()),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: secondaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: spacingLarge),
+                      child: IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(spacingXSmall),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(borderRadiusMedium),
+                          ),
+                          child: Icon(
+                            Icons.refresh_outlined,
+                            color: primaryColor,
+                          ),
+                        ),                        onPressed: () {
+                          _fetchDashboardMetrics();
+                          _fetchRecentForums();
+                          _fetchActiveUsers();
+                        },
+                        tooltip: 'Refresh All Data',
+                      ),
+                    ),
+                  ],
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.all(spacingLarge),
+                  sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        // Metrics Grid
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final cardWidth = constraints.maxWidth > 1200
+                                ? (constraints.maxWidth - spacingLarge * 3) / 3
+                                : constraints.maxWidth > 800
+                                    ? (constraints.maxWidth - spacingLarge) / 2
+                                    : constraints.maxWidth;
+
+                            return Wrap(
+                              spacing: spacingLarge,
+                              runSpacing: spacingLarge,
+                              children: [
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Total Users',
+                                    dashboardMetrics['Users'] ?? 0,
+                                    Icons.people,
+                                    primaryColor,
+                                    _animations[0],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Places',
+                                    dashboardMetrics['Places'] ?? 0,
+                                    Icons.place,
+                                    accentColor,
+                                    _animations[1],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Objects',
+                                    dashboardMetrics['Objects'] ?? 0,
+                                    Icons.view_in_ar,
+                                    infoColor,
+                                    _animations[2],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Pending Forums',
+                                    dashboardMetrics['Pending Forums'] ?? 0,
+                                    Icons.pending_actions,
+                                    warningColor,
+                                    _animations[3],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Approved Forums',
+                                    dashboardMetrics['Approved Forums'] ?? 0,
+                                    Icons.check_circle,
+                                    successColor,
+                                    _animations[4],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _buildMetricCard(
+                                    'Rejected Forums',
+                                    dashboardMetrics['Rejected Forums'] ?? 0,
+                                    Icons.cancel,
+                                    errorColor,
+                                    _animations[5],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),                        // Two-column layout for tables
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Recent Forums Table (Left column)
+                            Expanded(
+                              flex: 3,
+                              child: _buildRecentForumsTable(),
+                            ),
+                            const SizedBox(width: spacingLarge),
+                            // Users Table (Right column)
+                            Expanded(
+                              flex: 2,
+                              child: _buildUsersTable(),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          value,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
-                        ),
+                        _buildUsersTable(),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

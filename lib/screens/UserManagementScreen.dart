@@ -24,21 +24,77 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24.0), // Consistent padding
+              children: [                Container(
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'User Management',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                      ),
-                      SizedBox(
+                            child: Icon(
+                              Icons.people_alt_outlined,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'User Management',
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                              ),
+                              Text(
+                                'Manage your registered users',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),                      Container(
                         width: 300,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: TextField(
                           controller: _searchController,
                           onChanged: (value) {
@@ -49,24 +105,29 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           decoration: InputDecoration(
                             hintText: 'Search users...',
                             hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Theme.of(context).hintColor,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                                 ),
                             prefixIcon: Icon(
                               Icons.search,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                            // border uses inputDecorationTheme from app_theme.dart
+                            filled: false,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                width: 2,
+                              ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Consistent padding
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
                         ),
                       ),
@@ -134,109 +195,147 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           final user = users[index].data() as Map<String, dynamic>;
                           final bool isActive = user['status'] == 'Active';
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 16), // Consistent margin
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Theme.of(context).dividerColor),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16), // Consistent padding
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                radius: 24,
-                                child: Text(
-                                  (user['username'] as String).substring(0, 1).toUpperCase(),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 18,
-                                  ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                              title: Text(
-                                user['username'] ?? '',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 8), // Consistent spacing
-                                  Row(
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {},
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Consistent padding
-                                        decoration: BoxDecoration(
-                                          color: isActive
-                                              ? Theme.of(context).colorScheme.tertiaryContainer // accentColor based
-                                              : Theme.of(context).colorScheme.errorContainer,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          user['status'] ?? 'Unknown',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: isActive
-                                                ? Theme.of(context).colorScheme.onTertiaryContainer // accentColor based
-                                                : Theme.of(context).colorScheme.onErrorContainer,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      CircleAvatar(
+                                        backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                        radius: 24,
+                                        backgroundImage: user['photoURL'] != null && user['photoURL'].toString().isNotEmpty
+                                            ? NetworkImage(user['photoURL'])
+                                            : null,
+                                        child: user['photoURL'] == null || user['photoURL'].toString().isEmpty
+                                            ? Text(
+                                                (user['username'] as String).substring(0, 1).toUpperCase(),
+                                                style: TextStyle(
+                                                  color: Theme.of(context).colorScheme.secondary,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 18,
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user['username'] ?? '',
+                                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                    color: Theme.of(context).colorScheme.onSurface,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              user['email'] ?? '',
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: isActive
+                                                        ? Colors.green.withOpacity(0.1)
+                                                        : Theme.of(context).colorScheme.error.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Container(
+                                                        width: 8,
+                                                        height: 8,
+                                                        margin: const EdgeInsets.only(right: 6),
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: isActive ? Colors.green : Theme.of(context).colorScheme.error,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        user['status'] ?? 'Unknown',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: isActive ? Colors.green : Theme.of(context).colorScheme.error,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  child: Text(
+                                                    user['role'] ?? 'User',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Theme.of(context).colorScheme.secondary,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8), // Consistent spacing
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Consistent padding
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.secondaryContainer,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          user['role'] ?? 'User',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                            fontWeight: FontWeight.w500,
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              isActive ? Icons.block : Icons.check_circle,
+                                              color: isActive
+                                                  ? Theme.of(context).colorScheme.error
+                                                  : Colors.green,
+                                            ),
+                                            onPressed: () => _toggleUserStatus(user),
+                                            tooltip: isActive ? 'Block User' : 'Activate User',
                                           ),
-                                        ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete_outline,
+                                              color: Theme.of(context).colorScheme.error,
+                                            ),
+                                            onPressed: () => _deleteUser(user),
+                                            tooltip: 'Delete User',
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                  if (user['email'] != null) ...[
-                                    const SizedBox(height: 4), // Consistent spacing
-                                    Text(
-                                      user['email'],
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      isActive ? Icons.block : Icons.check_circle,
-                                      color: isActive
-                                          ? Theme.of(context).colorScheme.error
-                                          : Theme.of(context).colorScheme.tertiary, // accentColor
-                                    ),
-                                    onPressed: () => _toggleUserStatus(user),
-                                    tooltip: isActive ? 'Block User' : 'Activate User',
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      color: Theme.of(context).colorScheme.error,
-                                    ),
-                                    onPressed: () => _deleteUser(user),
-                                    tooltip: 'Delete User',
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           );

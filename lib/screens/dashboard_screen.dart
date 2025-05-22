@@ -1216,7 +1216,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             ),
                           ],
                         ),
-                        _buildUsersTable(),
                       ],
                     ),
                   ),

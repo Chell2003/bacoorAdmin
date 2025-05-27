@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PlaceProvider()),
       ],
       child: MaterialApp(
-        title: 'CMS App',
+        title: 'BACOORDINATES',
         theme: appTheme, // Apply the custom theme
         // darkTheme: appDarkTheme, // Optional: if you have a dark theme
         // themeMode: ThemeMode.system, // Optional: set theme mode

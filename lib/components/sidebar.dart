@@ -274,11 +274,12 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.admin_panel_settings,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      size: 32,
-                    ),
+                    child: Image(
+                                image: AssetImage('assets/images/logo.png'),
+                                width: 54,
+                                height: 54,
+                                fit: BoxFit.contain,
+                              ),
                   ),
                   const SizedBox(width: spacingMedium),
                   Column(

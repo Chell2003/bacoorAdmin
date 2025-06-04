@@ -4,6 +4,8 @@ import '../components/sidebar.dart';
 import '../models/place_model.dart';
 import '../providers/place_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/responsive.dart';
+import '../utils/text_scale.dart';
 
 class PlaceManagementScreen extends StatefulWidget {
   const PlaceManagementScreen({super.key});
@@ -24,6 +26,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
   String _searchQuery = '';
   final bool _isLoading = false;
   String? _error;
+  bool _isSidebarVisible = true;
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String selectedCategory = "Churches";
   final List<String> categories = ["Churches", "Historical", "Restaurants", "Hotels"];
@@ -310,28 +314,59 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
     editLongController.dispose();
   }
 
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarVisible = !_isSidebarVisible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    bool isSmallScreen = !Responsive.isDesktop(context);
+    double screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: isSmallScreen ? Sidebar(isVisible: true) : null,
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Sidebar(),
+          if (!isSmallScreen) Sidebar(isVisible: _isSidebarVisible),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Place Management',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      if (isSmallScreen)
+                        IconButton(
+                          icon: Icon(Icons.menu),
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                        ),
+                      if (!isSmallScreen)
+                        IconButton(
+                          icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
+                          onPressed: _toggleSidebar,
+                        ),
+                      Expanded(
+                        child: Text(
+                          'Place Management',
+                          style: TextScale.scale(
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            context,
+                          ),
+                        ),
                       ),
                       SizedBox(
-                        width: 300,
+                        width: isSmallScreen ? 200 : 300,
                         child: TextField(
                           controller: _searchController,
                           onChanged: (value) {
@@ -339,9 +374,18 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                               _searchQuery = value.toLowerCase();
                             });
                           },
+                          style: TextScale.scale(
+                            Theme.of(context).textTheme.bodyLarge,
+                            context,
+                          ),
                           decoration: InputDecoration(
                             hintText: 'Search places...',
-                            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor),
+                            hintStyle: TextScale.scale(
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Theme.of(context).hintColor
+                              ),
+                              context,
+                            ),
                             prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             filled: true,
                             fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
@@ -357,7 +401,10 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: isSmallScreen ? 12 : 16,
+                              vertical: isSmallScreen ? 8 : 12
+                            ),
                           ),
                         ),
                       ),
@@ -366,326 +413,36 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: SingleChildScrollView(
-                            child: _buildAddPlaceForm(context), // Pass context for theming
+                    padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16.0 : 24.0),
+                    child: screenWidth < 768
+                      ? SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              _buildAddPlaceForm(context),
+                              SizedBox(height: 24),
+                              Container(
+                                height: MediaQuery.of(context).size.height * 0.5,
+                                child: _buildPlacesList(context),
+                              ),
+                            ],
                           ),
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: screenWidth < 1200 ? 4 : 3,
+                              child: SingleChildScrollView(
+                                child: _buildAddPlaceForm(context),
+                              ),
+                            ),
+                            SizedBox(width: isSmallScreen ? 16 : 24),
+                            Expanded(
+                              flex: screenWidth < 1200 ? 6 : 7,
+                              child: _buildPlacesList(context),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          flex: 7,
-                          child: Consumer<PlaceProvider>(
-                            builder: (context, provider, child) {
-                              var places = provider.places;
-                              
-                              if (_searchQuery.isNotEmpty) {
-                                places = places.where((place) {
-                                  return place.title.toLowerCase().contains(_searchQuery) ||
-                                         place.category.toLowerCase().contains(_searchQuery);
-                                }).toList();
-                              }
-
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(context).shadowColor.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(24),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.place,
-                                                  color: Theme.of(context).colorScheme.primary,
-                                                  size: 24,
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Text(
-                                                  "Places List",
-                                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                                    color: Theme.of(context).colorScheme.primary,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              '${places.length} Places',
-                                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                                color: Theme.of(context).colorScheme.secondary,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Divider(
-                                      height: 1,
-                                      color: Theme.of(context).dividerColor.withOpacity(0.1),
-                                    ),
-                                    if (places.isEmpty)
-                                      Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(24),
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.place_outlined,
-                                                size: 48,
-                                                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Text(
-                                                _searchQuery.isEmpty 
-                                                  ? 'No places added yet'
-                                                  : 'No places found',
-                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                              ),
-                                              if (_searchQuery.isNotEmpty) ...[
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  'Try adjusting your search',
-                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      Expanded(
-                                        child: ListView.separated(
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                          itemCount: places.length,
-                                          separatorBuilder: (context, index) => 
-                                              Divider(height: 1, color: Theme.of(context).dividerColor),
-                                          itemBuilder: (context, index) {
-                                            final place = places[index];
-                                            return Container(
-                                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.surface,
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Theme.of(context).shadowColor.withOpacity(0.03),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: ListTile(
-                                                contentPadding: const EdgeInsets.all(16),
-                                                leading: Container(
-                                                  width: 80,
-                                                  height: 80,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Theme.of(context).shadowColor.withOpacity(0.1),
-                                                        blurRadius: 4,
-                                                        offset: const Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    child: Image.network(
-                                                      place.imageUrl,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context, error, stackTrace) {
-                                                        return Container(
-                                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                                          child: Icon(
-                                                            Icons.image,
-                                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                            size: 32,
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                ),
-                                                title: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        place.title,
-                                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Theme.of(context).colorScheme.onSurface,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.2),
-                                                        borderRadius: BorderRadius.circular(16),
-                                                      ),
-                                                      child: Text(
-                                                        '${place.lat}, ${place.long}',
-                                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                          color: Theme.of(context).colorScheme.tertiary,
-                                                          fontWeight: FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                subtitle: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      place.description,
-                                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                      ),
-                                                      maxLines: 2,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          decoration: BoxDecoration(
-                                                            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
-                                                            borderRadius: BorderRadius.circular(20),
-                                                          ),
-                                                          child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Icon(
-                                                                Icons.category_outlined,
-                                                                size: 16,
-                                                                color: Theme.of(context).colorScheme.secondary,
-                                                              ),
-                                                              const SizedBox(width: 6),
-                                                              Text(
-                                                                place.category,
-                                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                                  color: Theme.of(context).colorScheme.secondary,
-                                                                  fontWeight: FontWeight.w500,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        const SizedBox(width: 12),
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          decoration: BoxDecoration(
-                                                            color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.2),
-                                                            borderRadius: BorderRadius.circular(20),
-                                                          ),
-                                                          child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Icon(
-                                                                Icons.favorite,
-                                                                size: 16,
-                                                                color: Theme.of(context).colorScheme.tertiary,
-                                                              ),
-                                                              const SizedBox(width: 6),
-                                                              Text(
-                                                                '${place.likes}',
-                                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                                  color: Theme.of(context).colorScheme.tertiary,
-                                                                  fontWeight: FontWeight.w500,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                                trailing: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
-                                                        borderRadius: BorderRadius.circular(8),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: const Icon(Icons.edit_outlined),
-                                                        color: Theme.of(context).colorScheme.primary,
-                                                        onPressed: () => _editPlace(place),
-                                                        tooltip: 'Edit place',
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
-                                                        borderRadius: BorderRadius.circular(8),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: const Icon(Icons.delete_outline),
-                                                        color: Theme.of(context).colorScheme.error,
-                                                        onPressed: () => _deletePlace(place.id),
-                                                        tooltip: 'Delete place',
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -962,6 +719,257 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPlacesList(BuildContext context) {
+    return Consumer<PlaceProvider>(
+      builder: (context, provider, child) {
+        var places = provider.places;
+
+        if (_searchQuery.isNotEmpty) {
+          places = places.where((place) {
+            return place.title.toLowerCase().contains(_searchQuery) ||
+                   place.category.toLowerCase().contains(_searchQuery);
+          }).toList();
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).shadowColor.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.place,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Places List",
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${places.length} Places',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context).dividerColor.withOpacity(0.1),
+              ),
+              if (places.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.place_outlined,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty 
+                            ? 'No places added yet'
+                            : 'No places found',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        if (_searchQuery.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Try adjusting your search',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: places.length,
+                    separatorBuilder: (context, index) => 
+                        Divider(height: 1, color: Theme.of(context).dividerColor),
+                    itemBuilder: (context, index) {
+                      final place = places[index];
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).shadowColor.withOpacity(0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).shadowColor.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                place.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    child: Icon(
+                                      Icons.image,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      size: 32,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                place.title,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  '${place.lat}, ${place.long}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.tertiary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              Text(
+                                place.description,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.edit_outlined),
+                                  color: Theme.of(context).colorScheme.primary,
+                                  onPressed: () => _editPlace(place),
+                                  tooltip: 'Edit place',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: Theme.of(context).colorScheme.error,
+                                  onPressed: () => _deletePlace(place.id),
+                                  tooltip: 'Delete place',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

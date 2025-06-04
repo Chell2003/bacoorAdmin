@@ -6,7 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../components/sidebar.dart';
-import 'dart:typed_data';
+import '../utils/responsive.dart';
+import '../utils/text_scale.dart';
 
 class UploadARObjectScreen extends StatefulWidget {
   const UploadARObjectScreen({super.key});
@@ -16,10 +17,12 @@ class UploadARObjectScreen extends StatefulWidget {
 }
 
 class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _longController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isSidebarVisible = true;  // Add this line
 
   String? _filePath;
   Uint8List? _fileBytes;
@@ -58,7 +61,13 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error selecting file: $e', style: TextStyle(color: Theme.of(context).colorScheme.onError)),
+          content: Text(
+            'Error selecting file: $e',
+            style: TextScale.scale(
+              TextStyle(color: Theme.of(context).colorScheme.onError),
+              context,
+            ),
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -75,7 +84,13 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
         _fileName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please provide all required information', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          content: Text(
+            'Please provide all required information',
+            style: TextScale.scale(
+              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              context,
+            ),
+          ),
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
       );
@@ -148,6 +163,12 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
     }
   }
 
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarVisible = !_isSidebarVisible;
+    });
+  }
+
   @override
   void dispose() {
     _latController.dispose();
@@ -160,26 +181,51 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isSmallScreen = !Responsive.isDesktop(context);
+    double screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: isSmallScreen ? Sidebar(isVisible: true) : null,
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Sidebar(),
+          if (!isSmallScreen) Sidebar(isVisible: _isSidebarVisible),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'AR Objects Management',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      if (isSmallScreen)
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                        ),
+                      if (!isSmallScreen)
+                        IconButton(
+                          icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
+                          onPressed: _toggleSidebar,
+                        ),
+                      Expanded(
+                        child: Text(
+                          'AR Objects Management',
+                          style: TextScale.scale(
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            context,
+                          ),
+                        ),
                       ),
                       SizedBox(
-                        width: 300,
+                        width: isSmallScreen ? 200 : 300,
                         child: TextField(
                           controller: _arSearchController,
                           onChanged: (value) {
@@ -205,7 +251,10 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: isSmallScreen ? 12 : 16,
+                              vertical: isSmallScreen ? 8 : 12
+                            ),
                           ),
                         ),
                       ),
@@ -214,23 +263,36 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: SingleChildScrollView(
-                            child: _buildUploadForm(),
+                    padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16.0 : 24.0),
+                    child: screenWidth < 768
+                      ? SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              _buildUploadForm(),
+                              SizedBox(height: 24),
+                              Container(
+                                height: MediaQuery.of(context).size.height * 0.5,
+                                child: _buildRecentARObjectsList(),
+                              ),
+                            ],
                           ),
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: screenWidth < 1200 ? 4 : 3,
+                              child: SingleChildScrollView(
+                                child: _buildUploadForm(),
+                              ),
+                            ),
+                            SizedBox(width: isSmallScreen ? 16 : 24),
+                            Expanded(
+                              flex: screenWidth < 1200 ? 6 : 7,
+                              child: _buildRecentARObjectsList(),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          flex: 7,
-                          child: _buildRecentARObjectsList(),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -242,8 +304,10 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
   }
 
   Widget _buildUploadForm() {
+    bool isSmallScreen = MediaQuery.of(context).size.width < 768;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -262,7 +326,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
@@ -275,26 +339,52 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                     color: Theme.of(context).colorScheme.primary,
                     size: 24,
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Add New AR Object",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),                    Text(
+                      "Add New AR Object",
+                      style: TextScale.scale(
+                        Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        context,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: isSmallScreen ? 24 : 32),
             _buildTextField("Title", _titleController),
-            const SizedBox(height: 20),
+            SizedBox(height: isSmallScreen ? 16 : 20),
             _buildTextField("Description", _descriptionController, maxLines: 3),
-            const SizedBox(height: 20),
-            _buildLocationFields(),
-            const SizedBox(height: 32),
+            SizedBox(height: isSmallScreen ? 16 : 20),
+            MediaQuery.of(context).size.width < 900
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Location',
+                      style: TextScale.scale(
+                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        context,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildTextField("Latitude", _latController)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildTextField("Longitude", _longController)),
+                      ],
+                    ),
+                  ],
+                )
+              : _buildLocationFields(),
+            SizedBox(height: isSmallScreen ? 24 : 32),
             _buildFileUploadSection(),
-            const SizedBox(height: 32),
+            SizedBox(height: isSmallScreen ? 24 : 32),
             Container(
               width: double.infinity,
               height: 50,
@@ -419,27 +509,38 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
+    bool isSmallScreen = MediaQuery.of(context).size.width < 768;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w500,
+          style: TextScale.scale(
+            Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+            context,
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
+          style: TextScale.scale(
+            Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            context,
           ),
           decoration: InputDecoration(
             filled: true,
             fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 12 : 16,
+              vertical: isSmallScreen ? 12 : 16
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
@@ -465,8 +566,17 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                 color: Theme.of(context).colorScheme.error,
               ),
             ),
-            hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            hintStyle: TextScale.scale(
+              TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+              context,
+            ),
+            errorStyle: TextScale.scale(
+              TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
+              context,
             ),
           ),
           validator: (value) {
@@ -481,16 +591,34 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
   }
 
   Widget _buildLocationFields() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildTextField("Latitude", _latController)),
-        const SizedBox(width: 16), // Consistent spacing
-        Expanded(child: _buildTextField("Longitude", _longController)),
+        Text(
+          'Location',
+          style: TextScale.scale(
+            Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+            context,
+          ),
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildTextField("Latitude", _latController)),
+            const SizedBox(width: 16),
+            Expanded(child: _buildTextField("Longitude", _longController)),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildRecentARObjectsList() {
+    bool isSmallScreen = MediaQuery.of(context).size.width < 768;
+    
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -508,9 +636,9 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
@@ -525,9 +653,12 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                   const SizedBox(width: 12),
                   Text(
                     "AR Objects List",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                    style: TextScale.scale(
+                      Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      context,
                     ),
                   ),
                 ],
@@ -537,14 +668,12 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
           Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1)),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('ar_objects').orderBy('timestamp', descending: true).snapshots(),
+              stream: FirebaseFirestore.instance.collection('ar_objects')
+                .orderBy('timestamp', descending: true)
+                .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  );
+                  return Center(child: CircularProgressIndicator());
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -562,19 +691,13 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                           _arSearchQuery.isEmpty 
                             ? "No AR Objects uploaded yet"
                             : "No AR Objects found",
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (_arSearchQuery.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            "Try adjusting your search",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: TextScale.scale(
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
+                            context,
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   );
@@ -590,13 +713,13 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                       }).toList();
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 8),
                   itemCount: filteredDocs.length,
                   separatorBuilder: (context, index) => Divider(
                     height: 1,
                     color: Theme.of(context).dividerColor.withOpacity(0.1),
-                    indent: 24,
-                    endIndent: 24,
+                    indent: isSmallScreen ? 16 : 24,
+                    endIndent: isSmallScreen ? 16 : 24,
                   ),
                   itemBuilder: (context, index) {
                     final doc = filteredDocs[index];
@@ -607,7 +730,10 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                     final longitude = data['longitude']?.toString() ?? '';
 
                     return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 8 : 16,
+                        vertical: isSmallScreen ? 4 : 8
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
@@ -616,7 +742,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                         ),
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
+                        contentPadding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                         leading: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -629,44 +755,48 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                             size: 24,
                           ),
                         ),
-                        title: Row(
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            Text(
+                              title,
+                              style: TextScale.scale(
+                                Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                context,
                               ),
                             ),
+                            SizedBox(height: 8),
+                            Text(
+                              description,
+                              style: TextScale.scale(
+                                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                context,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
                                 '$latitude, $longitude',
-                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  fontWeight: FontWeight.w500,
+                                style: TextScale.scale(
+                                  Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  context,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text(
-                              description,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -713,7 +843,6 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
   }
 
   Future<void> _editARObject(String id, Map<String, dynamic> data) async {
-    // Create temporary controllers for the modal form
     final titleController = TextEditingController(text: data['title'] ?? '');
     final descriptionController = TextEditingController(text: data['description'] ?? '');
     final latController = TextEditingController(text: data['latitude']?.toString() ?? '');
@@ -733,8 +862,11 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
             const SizedBox(width: 8),
             Text(
               'Edit AR Object',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+              style: TextScale.scale(
+                Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                context,
               ),
             ),
           ],
@@ -755,69 +887,6 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                   Expanded(child: _buildTextField("Longitude", longController)),
                 ],
               ),
-              const SizedBox(height: 16),
-              StatefulBuilder(
-                builder: (context, setState) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (newFileName != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              color: Theme.of(context).colorScheme.secondary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                "Selected File: $newFileName",
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        FilePickerResult? result = await FilePicker.platform.pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: ['glb'],
-                          withData: true,
-                        );
-
-                        if (result != null) {
-                          setState(() {
-                            newFileBytes = result.files.single.bytes;
-                            newFileName = result.files.single.name;
-                          });
-                        }
-                      },
-                      icon: Icon(Icons.file_upload_outlined, size: 20),
-                      label: Text(newFileName == null ? 'Select New .glb File' : 'Change File'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2),
-                        foregroundColor: Theme.of(context).colorScheme.secondary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
@@ -826,7 +895,10 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextScale.scale(
+                TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                context,
+              ),
             ),
           ),
           ElevatedButton(
@@ -843,7 +915,13 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Save Changes'),
+            child: Text(
+              'Save Changes',
+              style: TextScale.scale(
+                Theme.of(context).textTheme.labelLarge,
+                context,
+              ),
+            ),
           ),
         ],
       ),

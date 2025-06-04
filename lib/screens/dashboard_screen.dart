@@ -16,6 +16,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late AnimationController _animationController;
   late List<Animation<double>> _animations;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isSidebarVisible = true;
 
   Map<String, int> dashboardMetrics = {
     'Users': 0,
@@ -465,12 +467,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(borderRadiusLarge),
                 ),
-                headingRowColor: MaterialStateProperty.all(
+                headingRowColor: WidgetStateProperty.all(
                   Theme.of(context).colorScheme.surface.withOpacity(0.5),
                 ),
-                dataRowColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
-                    if (states.contains(MaterialState.hovered)) {
+                dataRowColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
+                    if (states.contains(WidgetState.hovered)) {
                       return Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1);
                     }
                     return Colors.transparent;
@@ -1018,14 +1020,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     final isSmallScreen = screenSize.width < 1100;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: isSmallScreen ? const Sidebar(isVisible: true) : null,
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isSmallScreen) const Sidebar(),
+          if (!isSmallScreen) const Sidebar(isVisible: true),
           Expanded(
             child: CustomScrollView(
-              slivers: [                SliverAppBar(
+              slivers: [
+                SliverAppBar(
                   floating: true,
                   snap: true,
                   elevation: 0,
@@ -1034,7 +1039,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   leading: isSmallScreen
                       ? IconButton(
                           icon: const Icon(Icons.menu),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                         )
                       : null,
                   title: Row(
@@ -1126,12 +1131,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         // Metrics Grid
                         LayoutBuilder(
                           builder: (context, constraints) {
-                            final cardWidth = constraints.maxWidth > 1200
-                                ? (constraints.maxWidth - spacingLarge * 3) / 3
-                                : constraints.maxWidth > 800
-                                    ? (constraints.maxWidth - spacingLarge) / 2
-                                    : constraints.maxWidth;
-
+                            final double cardWidth = constraints.maxWidth > 1200 ? constraints.maxWidth / 3 - spacingLarge : constraints.maxWidth / 2 - spacingMedium;
                             return Wrap(
                               spacing: spacingLarge,
                               runSpacing: spacingLarge,
@@ -1139,10 +1139,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                 SizedBox(
                                   width: cardWidth,
                                   child: _buildMetricCard(
-                                    'Total Users',
+                                    'Users',
                                     dashboardMetrics['Users'] ?? 0,
-                                    Icons.people,
-                                    primaryColor,
+                                    Icons.people_alt_outlined,
+                                    Theme.of(context).colorScheme.primary,
                                     _animations[0],
                                   ),
                                 ),
@@ -1151,8 +1151,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: _buildMetricCard(
                                     'Places',
                                     dashboardMetrics['Places'] ?? 0,
-                                    Icons.place,
-                                    accentColor,
+                                    Icons.place_outlined,
+                                    Theme.of(context).colorScheme.secondary,
                                     _animations[1],
                                   ),
                                 ),
@@ -1161,8 +1161,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: _buildMetricCard(
                                     'Objects',
                                     dashboardMetrics['Objects'] ?? 0,
-                                    Icons.view_in_ar,
-                                    infoColor,
+                                    Icons.view_in_ar_outlined,
+                                    Theme.of(context).colorScheme.tertiary,
                                     _animations[2],
                                   ),
                                 ),
@@ -1171,8 +1171,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: _buildMetricCard(
                                     'Pending Forums',
                                     dashboardMetrics['Pending Forums'] ?? 0,
-                                    Icons.pending_actions,
-                                    warningColor,
+                                    Icons.pending_outlined,
+                                    Colors.orange,
                                     _animations[3],
                                   ),
                                 ),
@@ -1181,8 +1181,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: _buildMetricCard(
                                     'Approved Forums',
                                     dashboardMetrics['Approved Forums'] ?? 0,
-                                    Icons.check_circle,
-                                    successColor,
+                                    Icons.check_circle_outline,
+                                    Colors.green,
                                     _animations[4],
                                   ),
                                 ),
@@ -1191,30 +1191,43 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: _buildMetricCard(
                                     'Rejected Forums',
                                     dashboardMetrics['Rejected Forums'] ?? 0,
-                                    Icons.cancel,
-                                    errorColor,
+                                    Icons.cancel_outlined,
+                                    Colors.red,
                                     _animations[5],
                                   ),
                                 ),
                               ],
                             );
                           },
-                        ),                        // Two-column layout for tables
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Recent Forums Table (Left column)
-                            Expanded(
-                              flex: 3,
-                              child: _buildRecentForumsTable(),
-                            ),
-                            const SizedBox(width: spacingLarge),
-                            // Users Table (Right column)
-                            Expanded(
-                              flex: 2,
-                              child: _buildUsersTable(),
-                            ),
-                          ],
+                        ),
+                        // Responsive layout for tables
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth < 1100) {
+                              // Stack tables vertically on small screens
+                              return Column(
+                                children: [
+                                  _buildRecentForumsTable(),
+                                  const SizedBox(height: spacingLarge),
+                                  _buildUsersTable(),
+                                ],
+                              );
+                            } else {
+                              // Side by side on larger screens
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: _buildRecentForumsTable(),
+                                  ),
+                                  const SizedBox(width: spacingLarge),
+                                  Expanded(
+                                    child: _buildUsersTable(),
+                                  ),
+                                ],
+                              );
+                            }
+                          },
                         ),
                       ],
                     ),

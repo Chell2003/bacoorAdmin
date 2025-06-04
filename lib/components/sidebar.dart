@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/responsive.dart';
 
 class Sidebar extends StatefulWidget {
-  const Sidebar({Key? key}) : super(key: key);
+  final VoidCallback? onMenuTap;
+  final bool isVisible;
+  
+  const Sidebar({
+    super.key, 
+    this.onMenuTap,
+    this.isVisible = true,
+  });
 
   @override
   State<Sidebar> createState() => _SidebarState();
@@ -172,7 +180,7 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
                           ? colorScheme.onPrimary.withOpacity(0.2)
                           : isHovered 
                             ? colorScheme.primaryContainer.withOpacity(0.2)
-                            : colorScheme.surfaceVariant.withOpacity(0.3),
+                            : colorScheme.surfaceContainerHighest.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(borderRadiusSmall),
                       ),
                       child: Icon(
@@ -224,19 +232,21 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     String? currentRoute = ModalRoute.of(context)?.settings.name ?? "/dashboard";
-    final isDrawer = Scaffold.of(context).hasDrawer;
+    final isSmallScreen = MediaQuery.of(context).size.width < 768;
+    
+    if (!widget.isVisible && !isSmallScreen) {
+      return const SizedBox.shrink();
+    }
     
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: isDrawer ? MediaQuery.of(context).size.width * 0.85 : 280,
+      duration: const Duration(milliseconds: 200),      width: isSmallScreen ? MediaQuery.of(context).size.width * 0.85 : 280,
       height: double.infinity,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: isDrawer ? BorderRadius.zero : const BorderRadius.only(
+        borderRadius: isSmallScreen ? BorderRadius.zero : const BorderRadius.only(
           topRight: Radius.circular(borderRadiusLarge),
           bottomRight: Radius.circular(borderRadiusLarge),
         ),

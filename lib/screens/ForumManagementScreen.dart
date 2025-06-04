@@ -15,6 +15,14 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
   String currentTab = 'Pending';
   String? selectedPostId;
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isSidebarVisible = true;
+
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarVisible = !_isSidebarVisible;
+    });
+  }
 
   @override
   void initState() {
@@ -73,17 +81,23 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 768;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: isSmallScreen ? Sidebar(isVisible: true) : null,
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Sidebar(),
+          if (!isSmallScreen) Sidebar(isVisible: _isSidebarVisible),
           Expanded(
-            flex: 2, // Main content area for forum posts
+            flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [                Container(
-                  padding: const EdgeInsets.all(32.0),
+              children: [
+                Container(
+                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 32.0),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     boxShadow: [
@@ -100,6 +114,16 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                     children: [
                       Row(
                         children: [
+                          if (isSmallScreen)
+                            IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                            ),
+                          if (!isSmallScreen)
+                            IconButton(
+                              icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
+                              onPressed: _toggleSidebar,
+                            ),
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -118,53 +142,62 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Forum Management",
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                "Manage and moderate forum posts",
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
+                          if (!isSmallScreen)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.admin_panel_settings,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                ),
-                                const SizedBox(width: 8),
                                 Text(
-                                  isAdmin ? "Admin Mode" : "View Mode",
+                                  "Forum Management",
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                Text(
+                                  "Manage and moderate forum posts",
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                          if (isSmallScreen)
+                            Text(
+                              "Forum Management",
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
                         ],
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSmallScreen ? 12 : 16,
+                          vertical: isSmallScreen ? 6 : 8
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.admin_panel_settings,
+                              size: isSmallScreen ? 14 : 16,
+                              color: Theme.of(context).colorScheme.onSecondaryContainer,
+                            ),
+                            SizedBox(width: isSmallScreen ? 6 : 8),
+                            Text(
+                              isAdmin ? "Admin Mode" : "View Mode",
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                fontWeight: FontWeight.w600,
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -432,7 +465,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
               ],
             ),
           ),
-          if (selectedPostId != null) // Comments Panel
+          if (selectedPostId != null && !isSmallScreen) // Comments Panel - Only show on large screens
             Container(
               width: 380,
               decoration: BoxDecoration(
@@ -627,7 +660,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                       margin: EdgeInsets.only(top: 16),
                                       padding: EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -699,16 +732,17 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
   }
   Widget _buildTabWithCount(String title) {
     final isSelected = currentTab == title;
+    final isSmallScreen = MediaQuery.of(context).size.width < 768;
     Color tabColor;
     IconData tabIcon;
     
     switch(title) {
       case 'Pending':
-        tabColor = Color(0xFFFFA000); // Amber color for pending
+        tabColor = Color(0xFFFFA000);
         tabIcon = Icons.pending_rounded;
         break;
       case 'Approved':
-        tabColor = Color(0xFF2E7D32); // Dark green for approved
+        tabColor = Color(0xFF2E7D32);
         tabIcon = Icons.check_circle_rounded;
         break;
       case 'Rejected':
@@ -724,7 +758,10 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
       onTap: () => setState(() => currentTab = title),
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 16 : 24,
+          vertical: isSmallScreen ? 12 : 16
+        ),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -746,19 +783,20 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
           children: [
             Icon(
               tabIcon,
-              size: 22,
+              size: isSmallScreen ? 18 : 22,
               color: isSelected ? tabColor : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: 12),
+            SizedBox(width: isSmallScreen ? 8 : 12),
             Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: isSelected ? tabColor : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 letterSpacing: 0.2,
+                fontSize: isSmallScreen ? 13 : 14,
               ),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: isSmallScreen ? 6 : 8),
             StreamBuilder<int>(
               stream: _getStatusCount(title),
               builder: (context, snapshot) {
@@ -768,7 +806,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? tabColor.withOpacity(0.15)
-                        : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected

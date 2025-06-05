@@ -76,14 +76,28 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
+        // Show loading indicator while checking auth state
         if (userProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          );
         }
         
+        // If user is authenticated and is admin, navigate to dashboard
         if (userProvider.isAuthenticated && userProvider.isAdmin) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (ModalRoute.of(context)?.settings.name != '/dashboard') {
+              Navigator.of(context).pushReplacementNamed('/dashboard');
+            }
+          });
           return DashboardScreen();
         }
         
+        // If not authenticated or not admin, show login screen
         return AuthScreen();
       },
     );

@@ -17,7 +17,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   late AnimationController _animationController;
   late List<Animation<double>> _animations;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isSidebarVisible = true;
+  final bool _isSidebarVisible = true;
 
   Map<String, int> dashboardMetrics = {
     'Users': 0,

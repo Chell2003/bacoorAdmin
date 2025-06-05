@@ -270,7 +270,7 @@ class _UploadARObjectScreenState extends State<UploadARObjectScreen> {
                             children: [
                               _buildUploadForm(),
                               SizedBox(height: 24),
-                              Container(
+                              SizedBox(
                                 height: MediaQuery.of(context).size.height * 0.5,
                                 child: _buildRecentARObjectsList(),
                               ),

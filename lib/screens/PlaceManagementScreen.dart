@@ -27,7 +27,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
   final bool _isLoading = false;
   String? _error;
   bool _isSidebarVisible = true;
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String selectedCategory = "Churches";
   final List<String> categories = ["Churches", "Historical", "Restaurants", "Hotels"];
@@ -420,7 +420,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> {
                             children: [
                               _buildAddPlaceForm(context),
                               SizedBox(height: 24),
-                              Container(
+                              SizedBox(
                                 height: MediaQuery.of(context).size.height * 0.5,
                                 child: _buildPlacesList(context),
                               ),

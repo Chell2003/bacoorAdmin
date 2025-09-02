@@ -114,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       var forumsSnapshot = await _firestore
           .collection('forums')
           .orderBy('createdAt', descending: true)
-          .limit(5)
+          .limit(3)
           .get();
 
       setState(() {
@@ -137,7 +137,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     try {      var usersSnapshot = await _firestore
           .collection('users')
           .where('role', isNotEqualTo: 'Admin')
-          .limit(5)
+          .limit(3)
           .get();
 
       setState(() {
@@ -446,9 +446,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ],
             ),
-          ),          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Theme(
+          ),          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: spacingLarge),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Center(
+                child: Theme(
               data: Theme.of(context).copyWith(
                 dividerColor: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.1),
                 dataTableTheme: DataTableTheme.of(context).copyWith(
@@ -460,30 +463,33 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ),
               child: DataTable(
-                columnSpacing: 24,
+                columnSpacing: 32,
                 horizontalMargin: spacingLarge,
-                headingRowHeight: 56,
-                dataRowHeight: 70,
+                headingRowHeight: 60,
+                dataRowHeight: 76,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(borderRadiusLarge),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.05),
+                  ),
                 ),
-                headingRowColor: WidgetStateProperty.all(
-                  Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                headingRowColor: MaterialStateProperty.all(
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
                 ),
-                dataRowColor: WidgetStateProperty.resolveWith<Color>(
-                  (Set<WidgetState> states) {
-                    if (states.contains(WidgetState.hovered)) {
-                      return Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1);
+                dataRowColor: MaterialStateProperty.resolveWith<Color>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.hovered)) {
+                      return Theme.of(context).colorScheme.primaryContainer.withOpacity(0.15);
                     }
-                    return Colors.transparent;
+                    return Theme.of(context).colorScheme.surface;
                   },
                 ),
+                dividerThickness: 0.5,
                 columns: [
                   DataColumn(
                     label: Container(
                       padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(borderRadiusSmall),
                       ),
                       child: Row(
@@ -504,7 +510,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     label: Container(
                       padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(borderRadiusSmall),
                       ),
                       child: Row(
@@ -525,7 +530,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     label: Container(
                       padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(borderRadiusSmall),
                       ),
                       child: Row(
@@ -546,7 +550,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     label: Container(
                       padding: const EdgeInsets.symmetric(horizontal: spacingMedium, vertical: spacingSmall),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(borderRadiusSmall),
                       ),
                       child: Row(
@@ -582,7 +585,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 }
 
                 return DataRow(
-                  cells: [                    DataCell(
+                  cells: [                    
+                    DataCell(
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: spacingMedium,
@@ -695,18 +699,22 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: spacingMedium,
-                                vertical: 6,
+                                vertical: 8,
                               ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    statusColor.withOpacity(0.15),
-                                    statusColor.withOpacity(0.25),
+                                    statusColor.withOpacity(0.2),
+                                    statusColor.withOpacity(0.1),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(borderRadiusSmall),
+                                border: Border.all(
+                                  color: statusColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: statusColor.withOpacity(0.1),
@@ -798,9 +806,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 );
               }).toList(),
             ),
+            
           ),
+                ),
+              ),
+            ),
           
-          ),
+          const SizedBox(height: spacingMedium),
         ],
     ),
     );
@@ -997,12 +1009,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         ),
                       ),
                     ],
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: () {
-                      // Show user actions menu
-                    },
                   ),
                 );
               },
@@ -1213,15 +1219,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                 ],
                               );
                             } else {
-                              // Side by side on larger screens
+                              // Side by side on larger screens with 60/40 split
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
+                                    flex: 6,
                                     child: _buildRecentForumsTable(),
                                   ),
                                   const SizedBox(width: spacingLarge),
                                   Expanded(
+                                    flex: 4,
                                     child: _buildUsersTable(),
                                   ),
                                 ],

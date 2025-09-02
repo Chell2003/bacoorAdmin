@@ -291,31 +291,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                          if (!isSmallScreen)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    isActive ? Icons.block : Icons.check_circle,
-                                                    color: isActive
-                                                        ? Theme.of(context).colorScheme.error
-                                                        : Colors.green,
-                                                  ),
-                                                  onPressed: () => _toggleUserStatus(user),
-                                                  tooltip: isActive ? 'Block User' : 'Activate User',
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete_outline,
-                                                    color: Theme.of(context).colorScheme.error,
-                                                  ),
-                                                  onPressed: () => _deleteUser(user),
-                                                  tooltip: 'Delete User',
-                                                ),
-                                              ],
-                                            ),
+                                          ),   
                                         ],
                                       ),
                                       SizedBox(height: isSmallScreen ? 8 : 12),

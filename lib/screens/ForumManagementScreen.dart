@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../components/sidebar.dart';
+import 'package:provider/provider.dart';
+import '../../components/sidebar.dart';
+import '../../providers/forum_provider.dart';
+import '../../providers/notification_provider.dart';
 
 class ForumManagementScreen extends StatefulWidget {
   const ForumManagementScreen({super.key});
@@ -57,9 +60,27 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
       return;
     }
 
-    await FirebaseFirestore.instance.collection('forums').doc(forumId).update({
-      'status': newStatus,
-    });
+    try {
+      final forumProvider = context.read<ForumService>();
+      if (newStatus == "Approved") {
+        await forumProvider.approvePost(forumId);
+      } else if (newStatus == "Rejected") {
+        await forumProvider.rejectPost(forumId, "Post rejected by admin"); // Add a reason if needed
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post ${newStatus.toLowerCase()} successfully'),
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating post status: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+        ),
+      );
+    }
   }
 
   Stream<int> _getStatusCount(String status) {

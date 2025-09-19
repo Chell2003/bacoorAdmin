@@ -1,13 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../components/sidebar.dart';
-import '../../providers/forum_provider.dart';
+import '../components/sidebar.dart';
 
 class ForumManagementScreen extends StatefulWidget {
-  const ForumManagementScreen({super.key});
-
   @override
   _ForumManagementScreenState createState() => _ForumManagementScreenState();
 }
@@ -17,14 +13,6 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
   String currentTab = 'Pending';
   String? selectedPostId;
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isSidebarVisible = true;
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarVisible = !_isSidebarVisible;
-    });
-  }
 
   @override
   void initState() {
@@ -51,35 +39,14 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
   Future<void> _updatePostStatus(String forumId, String newStatus) async {
     if (!isAdmin) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Only admins can update post status!", style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
-          backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        ),
+        SnackBar(content: Text("Only admins can update post status!")),
       );
       return;
     }
 
-    try {
-      final forumProvider = context.read<ForumService>();
-      if (newStatus == "Approved") {
-        await forumProvider.approvePost(forumId);
-      } else if (newStatus == "Rejected") {
-        await forumProvider.rejectPost(forumId, "Post rejected by admin"); // Add a reason if needed
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Post ${newStatus.toLowerCase()} successfully'),
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating post status: ${e.toString()}'),
-          backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        ),
-      );
-    }
+    await FirebaseFirestore.instance.collection('forums').doc(forumId).update({
+      'status': newStatus,
+    });
   }
 
   Stream<int> _getStatusCount(String status) {
@@ -101,132 +68,48 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 768;
-
     return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: isSmallScreen ? Sidebar(isVisible: true) : null,
+      backgroundColor: Color(0xFFF8FAFC),
       body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isSmallScreen) Sidebar(isVisible: _isSidebarVisible),
+          Sidebar(),
           Expanded(
             flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 32.0),
+                  padding: const EdgeInsets.all(32.0),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                    color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: Offset(0, 1),
                       ),
                     ],
                   ),
                   width: double.infinity,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          if (isSmallScreen)
-                            IconButton(
-                              icon: const Icon(Icons.menu),
-                              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                            ),
-                          if (!isSmallScreen)
-                            IconButton(
-                              icon: Icon(_isSidebarVisible ? Icons.menu_open : Icons.menu),
-                              onPressed: _toggleSidebar,
-                            ),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                  Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.forum_outlined,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          if (!isSmallScreen)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Forum Management",
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
-                                ),
-                                Text(
-                                  "Manage and moderate forum posts",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          if (isSmallScreen)
-                            Text(
-                              "Forum Management",
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                        ],
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmallScreen ? 12 : 16,
-                          vertical: isSmallScreen ? 6 : 8
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.admin_panel_settings,
-                              size: isSmallScreen ? 14 : 16,
-                              color: Theme.of(context).colorScheme.onSecondaryContainer,
-                            ),
-                            SizedBox(width: isSmallScreen ? 6 : 8),
-                            Text(
-                              isAdmin ? "Admin Mode" : "View Mode",
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmallScreen ? 12 : 14,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        "Forum Management",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container( // Tab Bar
+                Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                    color: Colors.white,
                     border: Border(
-                      bottom: BorderSide(color: Theme.of(context).dividerColor),
+                      bottom: BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                   ),
                   child: Row(
@@ -246,15 +129,15 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator()); // Default indicator will use theme primary
+                        return Center(child: CircularProgressIndicator());
                       }
 
                       if (snapshot.hasError) {
-                        return Center(child: Text("Error loading forums", style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.error)));
+                        return Center(child: Text("Error loading forums"));
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(child: Text("No ${currentTab.toLowerCase()} forums found", style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)));
+                        return Center(child: Text("No ${currentTab.toLowerCase()} forums found"));
                       }
 
                       final forums = snapshot.data!.docs;
@@ -270,21 +153,20 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                               final post = forums[index];
                               final isSelected = selectedPostId == post.id;
 
-                              return Container( // Post container
-                                margin: EdgeInsets.only(bottom: 20),
+                              return Container(
+                                margin: EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor.withOpacity(0.5),
+                                    color: isSelected ? Color(0xFF3B82F6) : Color(0xFFE2E8F0),
                                     width: isSelected ? 2 : 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Theme.of(context).shadowColor.withOpacity(0.05),
-                                      blurRadius: 20,
+                                      color: Color(0xFF64748B).withOpacity(0.04),
+                                      blurRadius: 16,
                                       offset: Offset(0, 4),
-                                      spreadRadius: 0,
                                     ),
                                   ],
                                 ),
@@ -294,7 +176,7 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                       selectedPostId = isSelected ? null : post.id;
                                     });
                                   },
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   child: Padding(
                                     padding: EdgeInsets.all(24),
                                     child: Column(
@@ -303,33 +185,18 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                         Row(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Container( // authorAvatar
-                                              padding: EdgeInsets.all(14),
+                                            Container(
+                                              padding: EdgeInsets.all(12),
                                               decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Theme.of(context).colorScheme.primary.withOpacity(0.9),
-                                                    Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                                                  ],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                borderRadius: BorderRadius.circular(16),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                                                    blurRadius: 12,
-                                                    offset: Offset(0, 4),
-                                                    spreadRadius: -2,
-                                                  ),
-                                                ],
+                                                color: Color(0xFF3B82F6).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(
                                                 post['authorName'][0].toUpperCase(),
-                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                  color: Theme.of(context).colorScheme.onPrimary,
+                                                style: TextStyle(
+                                                  color: Color(0xFF3B82F6),
+                                                  fontSize: 18,
                                                   fontWeight: FontWeight.w600,
-                                                  height: 1,
                                                 ),
                                               ),
                                             ),
@@ -338,64 +205,70 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Text( // Post title
+                                                  Text(
                                                     post['title'],
-                                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Theme.of(context).colorScheme.onSurface,
-                                                          height: 1.3,
-                                                        ),
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Color(0xFF1E293B),
+                                                      height: 1.3,
+                                                    ),
                                                   ),
                                                   SizedBox(height: 6),
-                                                  Text( // Author/timestamp text
+                                                  Text(
                                                     "By ${post['authorName']} • ${_formatTimestamp(post['createdAt'])}",
-                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                        ),
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: Color(0xFF64748B),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                           ],
-                                        ),                                if (currentTab == 'Pending')
-                                          Container(
-                                            margin: const EdgeInsets.only(top: 24),
+                                        ),
+                                        if (currentTab == 'Pending')
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 20),
                                             child: Row(
                                               children: [
-                                                FilledButton.icon(
+                                                ElevatedButton.icon(
                                                   onPressed: () => _updatePostStatus(post.id, "Approved"),
-                                                  icon: Icon(Icons.check_circle_rounded, size: 20),
-                                                  label: Text("Approve Post"),
-                                                  style: FilledButton.styleFrom(
-                                                    foregroundColor: Colors.white,
-                                                    backgroundColor: Color(0xFF2E7D32),
-                                                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(14),
-                                                    ),
-                                                    elevation: 0,
-                                                    textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                                      fontWeight: FontWeight.w600,
-                                                      letterSpacing: 0.5,
+                                                  icon: Icon(Icons.check_rounded, size: 20),
+                                                  label: Text(
+                                                    "Approve",
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w500,
                                                     ),
                                                   ),
-                                                ),
-                                                SizedBox(width: 16),
-                                                FilledButton.icon(
-                                                  onPressed: () => _updatePostStatus(post.id, "Rejected"),
-                                                  icon: Icon(Icons.cancel_rounded, size: 20),
-                                                  label: Text("Reject Post"),
-                                                  style: FilledButton.styleFrom(
+                                                  style: ElevatedButton.styleFrom(
                                                     foregroundColor: Colors.white,
-                                                    backgroundColor: Theme.of(context).colorScheme.error,
-                                                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                                    backgroundColor: Color(0xFF22C55E),
+                                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                                     shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(14),
+                                                      borderRadius: BorderRadius.circular(10),
                                                     ),
                                                     elevation: 0,
-                                                    textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                                      fontWeight: FontWeight.w600,
-                                                      letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 12),
+                                                OutlinedButton.icon(
+                                                  onPressed: () => _updatePostStatus(post.id, "Rejected"),
+                                                  icon: Icon(Icons.close_rounded, size: 20),
+                                                  label: Text(
+                                                    "Reject",
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor: Color(0xFFEF4444),
+                                                    side: BorderSide(color: Color(0xFFEF4444)),
+                                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(10),
                                                     ),
                                                   ),
                                                 ),
@@ -404,35 +277,28 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                           ),
                                         if (post['content'] != null && post['content'].toString().isNotEmpty)
                                           Container(
-                                            margin: EdgeInsets.only(top: 20),
-                                            padding: EdgeInsets.all(20),
+                                            margin: EdgeInsets.only(top: 16),
+                                            padding: EdgeInsets.all(16),
                                             decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.surface,
-                                              borderRadius: BorderRadius.circular(16),
-                                              border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Theme.of(context).shadowColor.withOpacity(0.03),
-                                                  blurRadius: 10,
-                                                  offset: Offset(0, 2),
-                                                ),
-                                              ],
+                                              color: Color(0xFFF8FAFC),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(color: Color(0xFFE2E8F0)),
                                             ),
                                             child: Text(
                                               post['content'],
-                                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                color: Color(0xFF475569),
                                                 height: 1.6,
-                                                letterSpacing: 0.15,
                                               ),
                                             ),
                                           ),
                                         if (post['imageUrl'] != null && post['imageUrl'].toString().isNotEmpty)
-                                          Container( // Image section
+                                          Container(
                                             margin: EdgeInsets.only(top: 16),
                                             decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: Theme.of(context).dividerColor),
+                                              border: Border.all(color: Color(0xFFE2E8F0)),
                                             ),
                                             clipBehavior: Clip.antiAlias,
                                             child: ClipRRect(
@@ -441,11 +307,11 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                                 post['imageUrl'],
                                                 width: double.infinity,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) { // Error placeholder
+                                                errorBuilder: (context, error, stackTrace) {
                                                   return Container(
                                                     height: 200,
                                                     decoration: BoxDecoration(
-                                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                                      color: Color(0xFFF1F5F9),
                                                     ),
                                                     child: Column(
                                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -453,15 +319,16 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                                         Icon(
                                                           Icons.broken_image_rounded,
                                                           size: 40,
-                                                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                                          color: Color(0xFF94A3B8),
                                                         ),
                                                         SizedBox(height: 12),
                                                         Text(
                                                           'Image not available',
-                                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                                fontWeight: FontWeight.w500,
-                                                              ),
+                                                          style: TextStyle(
+                                                            color: Color(0xFF64748B),
+                                                            fontSize: 14,
+                                                            fontWeight: FontWeight.w500,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
@@ -485,17 +352,17 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
               ],
             ),
           ),
-          if (selectedPostId != null && !isSmallScreen) // Comments Panel - Only show on large screens
+          if (selectedPostId != null)
             Container(
               width: 380,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Colors.white,
                 border: Border(
-                  left: BorderSide(color: Theme.of(context).dividerColor),
+                  left: BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).shadowColor.withOpacity(0.08),
+                    color: Color(0xFF64748B).withOpacity(0.08),
                     blurRadius: 24,
                     offset: Offset(-12, 0),
                   ),
@@ -504,29 +371,31 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container( // "Comments" header
+                  Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: Theme.of(context).dividerColor),
+                        bottom: BorderSide(color: Color(0xFFE2E8F0)),
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text( // Title text
+                        Text(
                           "Comments",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                letterSpacing: -0.5,
-                              ),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E293B),
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                        IconButton( // Close button
+                        IconButton(
                           onPressed: () => setState(() => selectedPostId = null),
-                          icon: Icon(Icons.close_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          icon: Icon(Icons.close_rounded),
                           tooltip: 'Close comments',
                           style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            backgroundColor: Color(0xFFF1F5F9),
                             padding: EdgeInsets.all(8),
                           ),
                         ),
@@ -539,14 +408,14 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return Center(
-                            child: CircularProgressIndicator( // Loading indicator
+                            child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
                             ),
                           );
                         }
 
-                        if (snapshot.hasError) { // Error state
+                        if (snapshot.hasError) {
                           return Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -554,22 +423,23 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                 Icon(
                                   Icons.error_outline_rounded,
                                   size: 48,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                  color: Color(0xFF94A3B8),
                                 ),
                                 SizedBox(height: 16),
                                 Text(
                                   "Error loading comments",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ],
                             ),
                           );
                         }
 
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) { // Empty state
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                           return Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -577,15 +447,16 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                 Icon(
                                   Icons.chat_bubble_outline_rounded,
                                   size: 48,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                  color: Color(0xFF94A3B8),
                                 ),
                                 SizedBox(height: 16),
                                 Text(
                                   "No comments yet",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ],
                             ),
@@ -598,76 +469,52 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                           itemCount: comments.length,
                           itemBuilder: (context, index) {
                             final comment = comments[index];
-                            return Container( // Comment Item Container
+                            return Container(
                               margin: EdgeInsets.only(bottom: 16),
-                              padding: EdgeInsets.all(20),
+                              padding: EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.3)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context).shadowColor.withOpacity(0.04),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 2),
-                                    spreadRadius: -2,
-                                  ),
-                                ],
+                                color: Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Color(0xFFE2E8F0)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      Container( // authorAvatar
-                                        padding: EdgeInsets.all(12),
+                                      Container(
+                                        padding: EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Theme.of(context).colorScheme.secondary.withOpacity(0.9),
-                                              Theme.of(context).colorScheme.secondary.withOpacity(0.7),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
-                                              blurRadius: 8,
-                                              offset: Offset(0, 2),
-                                              spreadRadius: -2,
-                                            ),
-                                          ],
+                                          color: Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           comment['authorName']?[0]?.toUpperCase() ?? '?',
-                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.onSecondary,
+                                          style: TextStyle(
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            height: 1,
+                                            color: Color(0xFF64748B),
                                           ),
                                         ),
                                       ),
-                                      SizedBox(width: 16),
+                                      SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               comment['authorName'] ?? 'Anonymous',
-                                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.onSurface,
-                                                letterSpacing: 0.1,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1E293B),
                                               ),
                                             ),
-                                            SizedBox(height: 2),
                                             Text(
                                               _formatTimestamp(comment['createdAt']),
-                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                letterSpacing: 0.2,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Color(0xFF64748B),
                                               ),
                                             ),
                                           ],
@@ -677,27 +524,28 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                   ),
                                   if (comment['content']?.isNotEmpty ?? false)
                                     Container(
-                                      margin: EdgeInsets.only(top: 16),
-                                      padding: EdgeInsets.all(16),
+                                      margin: EdgeInsets.only(top: 12),
+                                      padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Color(0xFFE2E8F0)),
                                       ),
                                       child: Text(
                                         comment['content'],
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF475569),
                                           height: 1.5,
-                                          letterSpacing: 0.15,
                                         ),
                                       ),
                                     ),
                                   if (comment['imageUrl'] != null && comment['imageUrl'].toString().isNotEmpty)
-                                    Container( // Image placeholder styling
+                                    Container(
                                       margin: EdgeInsets.only(top: 12),
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Theme.of(context).dividerColor),
+                                        border: Border.all(color: Color(0xFFE2E8F0)),
                                       ),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
@@ -706,11 +554,11 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                           width: double.infinity,
                                           height: 200,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) { // Error placeholder styling
+                                          errorBuilder: (context, error, stackTrace) {
                                             return Container(
                                               height: 200,
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                                color: Color(0xFFF1F5F9),
                                               ),
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -718,15 +566,16 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
                                                   Icon(
                                                     Icons.broken_image_rounded,
                                                     size: 32,
-                                                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                                    color: Color(0xFF94A3B8),
                                                   ),
                                                   SizedBox(height: 8),
                                                   Text(
                                                     'Image not available',
-                                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                          fontWeight: FontWeight.w500,
-                                                        ),
+                                                    style: TextStyle(
+                                                      color: Color(0xFF64748B),
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -750,97 +599,50 @@ class _ForumManagementScreenState extends State<ForumManagementScreen> {
       ),
     );
   }
+
   Widget _buildTabWithCount(String title) {
     final isSelected = currentTab == title;
-    final isSmallScreen = MediaQuery.of(context).size.width < 768;
-    Color tabColor;
-    IconData tabIcon;
-    
-    switch(title) {
-      case 'Pending':
-        tabColor = Color(0xFFFFA000);
-        tabIcon = Icons.pending_rounded;
-        break;
-      case 'Approved':
-        tabColor = Color(0xFF2E7D32);
-        tabIcon = Icons.check_circle_rounded;
-        break;
-      case 'Rejected':
-        tabColor = Theme.of(context).colorScheme.error;
-        tabIcon = Icons.cancel_rounded;
-        break;
-      default:
-        tabColor = Theme.of(context).colorScheme.primary;
-        tabIcon = Icons.article_rounded;
-    }
-
     return InkWell(
       onTap: () => setState(() => currentTab = title),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 16 : 24,
-          vertical: isSmallScreen ? 12 : 16
-        ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? tabColor : Colors.transparent,
-              width: 3,
+              color: isSelected ? Color(0xFF3B82F6) : Colors.transparent,
+              width: 2,
             ),
           ),
-          gradient: isSelected ? LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              tabColor.withOpacity(0.15),
-              tabColor.withOpacity(0.08),
-              tabColor.withOpacity(0.02),
-            ],
-          ) : null,
         ),
         child: Row(
           children: [
-            Icon(
-              tabIcon,
-              size: isSmallScreen ? 18 : 22,
-              color: isSelected ? tabColor : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            SizedBox(width: isSmallScreen ? 8 : 12),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: isSelected ? tabColor : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                letterSpacing: 0.2,
-                fontSize: isSmallScreen ? 13 : 14,
+              style: TextStyle(
+                color: isSelected ? Color(0xFF3B82F6) : Color(0xFF64748B),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 14,
               ),
             ),
-            SizedBox(width: isSmallScreen ? 6 : 8),
+            SizedBox(width: 8),
             StreamBuilder<int>(
               stream: _getStatusCount(title),
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data == 0) return SizedBox();
+                if (!snapshot.hasData) return SizedBox();
                 return Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? tabColor.withOpacity(0.15)
-                        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? tabColor.withOpacity(0.3)
-                          : Theme.of(context).dividerColor.withOpacity(0.5),
-                      width: 1,
-                    ),
+                        ? Color(0xFF3B82F6).withOpacity(0.1)
+                        : Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '${snapshot.data}',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: isSelected ? tabColor : Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                    style: TextStyle(
+                      color: isSelected ? Color(0xFF3B82F6) : Color(0xFF64748B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 );

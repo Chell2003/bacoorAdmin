@@ -327,7 +327,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                                       user['status'] ?? 'Unknown',
                                                       style: TextStyle(
                                                         fontSize: isSmallScreen ? 10 : 12,
-                                                        color: isActive ? Colors.green : Theme.of(context).colorScheme.error,
+                                                        color: isActive ? Theme.of(context).colorScheme.error : Colors.green,
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                     ),

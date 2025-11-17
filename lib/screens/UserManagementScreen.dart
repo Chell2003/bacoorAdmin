@@ -320,7 +320,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                                       margin: EdgeInsets.only(right: isSmallScreen ? 4 : 6),
                                                       decoration: BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: isActive ? Colors.green : Theme.of(context).colorScheme.error,
+                                                        color: isActive ? Theme.of(context).colorScheme.error : Colors.green,
                                                       ),
                                                     ),
                                                     Text(

@@ -308,7 +308,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                                 decoration: BoxDecoration(
                                                   color: isActive
                                                       ? Colors.green.withOpacity(0.1)
-                                                      : Theme.of(context).colorScheme.error.withOpacity(0.1),
+                                                      : Colors.green.withOpacity(0.1),
                                                   borderRadius: BorderRadius.circular(20),
                                                 ),
                                                 child: Row(
